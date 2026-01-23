@@ -80,18 +80,21 @@ Cuando el usuario inicia una sesión, Claude DEBE detectar automáticamente qué
 
 ### Trigger C: Usuario describe una tarea específica
 ```
-1. Identificar proyecto activo (projects/*.md con Estado: Activo)
-2. Mapear tarea a fase del proyecto
-3. Ejecutar la tarea
-4. Ejecutar verificación automática
+1. Si solo hay un proyecto en projects/*.md → usar ese
+2. Si hay múltiples proyectos → preguntar cuál
+3. Mapear tarea a fase del proyecto
+4. Ejecutar la tarea
+5. Ejecutar verificación automática
 ```
 
 ### Trigger D: Sesión sin instrucción específica
 ```
-1. Buscar proyecto activo
-2. Leer progreso actual
-3. Identificar siguiente tarea pendiente
-4. HACER la tarea (no preguntar)
+1. Listar proyectos disponibles en projects/*.md
+2. Si solo hay uno → usarlo automáticamente
+3. Si hay múltiples → preguntar: "¿Con qué proyecto quieres trabajar?"
+4. Leer progreso actual
+5. Identificar siguiente tarea pendiente
+6. HACER la tarea (no preguntar)
 ```
 
 ---
@@ -338,7 +341,7 @@ Ejemplo:
 Usuario: "Continúa con [PROYECTO]"
 
 Claude (interno):
-1. Leer projects/[proyecto].md → Estado: Activo
+1. Leer projects/[proyecto].md
 2. Leer especificación del proyecto (path indicado en projects/[proyecto].md)
 3. Ver progreso → Identificar primera fase pendiente
 4. Detectar qué falta → Componente X no implementado
