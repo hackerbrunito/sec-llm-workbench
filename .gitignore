@@ -1,0 +1,41 @@
+# =============================================================================
+# META-PROYECTO - .gitignore
+# =============================================================================
+
+# Environment files (secrets)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Local settings (contiene paths específicos de máquina)
+.claude/settings.local.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary
+*.tmp
+*.temp
+*.log
+
+# Audits (local only, not synced)
+.audits/
+
+# Private files (personal projects, specs - not synced)
+.private/
+
+# Python (si se usa algún script local)
+__pycache__/
+*.py[cod]
+.venv/
+
+# Node (para MCP servers)
+node_modules/

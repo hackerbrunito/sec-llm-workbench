@@ -1,0 +1,182 @@
+# {{ PROJECT_NAME }}
+
+{{ PROJECT_DESCRIPTION }}
+
+---
+
+## Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/{{ GITHUB_USER }}/{{ PROJECT_NAME }}.git
+cd {{ PROJECT_NAME }}
+
+# Install dependencies (requires uv)
+uv sync
+
+# Copy environment file
+cp .env.example .env
+
+# Run the application
+uv run {{ project_name_lower }} --help
+```
+
+---
+
+## Requirements
+
+- Python 3.11+
+- [uv](https://docs.astral.sh/uv/) (package manager)
+- Docker & Docker Compose (optional, for services)
+
+---
+
+## Installation
+
+### Using uv (recommended)
+
+```bash
+# Install uv if not already installed
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install project dependencies
+uv sync
+
+# Install with dev dependencies
+uv sync --group dev
+```
+
+### Using Docker
+
+```bash
+# Start all services
+docker compose up -d
+
+# View logs
+docker compose logs -f {{ project_name_lower }}
+```
+
+---
+
+## Usage
+
+### CLI
+
+```bash
+# Show available commands
+uv run {{ project_name_lower }} --help
+
+# Run specific command
+uv run {{ project_name_lower }} [command] [options]
+```
+
+### Dashboard (if available)
+
+```bash
+uv run streamlit run src/interfaces/dashboard/app.py
+```
+
+---
+
+## Development
+
+### Running Tests
+
+```bash
+# Run all tests
+uv run pytest
+
+# Run with coverage
+uv run pytest --cov=src --cov-report=html
+
+# Run specific test file
+uv run pytest tests/unit/test_example.py -v
+```
+
+### Code Quality
+
+```bash
+# Format code
+uv run ruff format src tests
+
+# Lint code
+uv run ruff check src tests --fix
+
+# Type checking
+uv run mypy src
+```
+
+### Pre-commit Hooks
+
+```bash
+# Install pre-commit hooks
+uv run pre-commit install
+
+# Run manually
+uv run pre-commit run --all-files
+```
+
+---
+
+## Project Structure
+
+```
+{{ PROJECT_NAME }}/
+├── src/
+│   ├── domain/           # Business logic, entities, value objects
+│   ├── application/      # Use cases, ports (interfaces)
+│   ├── adapters/         # External integrations (DB, APIs, etc.)
+│   ├── infrastructure/   # Configuration, DI, logging
+│   └── interfaces/       # Entry points (CLI, API, Dashboard)
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   └── e2e/
+├── docs/
+├── data/
+├── pyproject.toml
+├── Dockerfile
+├── docker-compose.yml
+└── README.md
+```
+
+---
+
+## Configuration
+
+Configuration is managed via environment variables. See `.env.example` for all available options.
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DEBUG` | Enable debug mode | `false` |
+| `LOG_LEVEL` | Logging level | `INFO` |
+| `DATABASE_URL` | PostgreSQL connection string | - |
+
+---
+
+## API Documentation
+
+API documentation is available at `/docs` when running the application (if FastAPI is used).
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## Acknowledgments
+
+- Built with [uv](https://docs.astral.sh/uv/)
+- Architecture: Hexagonal (Ports & Adapters)

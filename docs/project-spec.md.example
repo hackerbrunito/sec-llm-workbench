@@ -1,0 +1,127 @@
+# [PROJECT_NAME] - Technical Specification
+
+> **Version:** 1.0
+> **Date:** YYYY-MM-DD
+
+---
+
+## 1. Overview
+
+Brief description of what this project does and why it exists.
+
+---
+
+## 2. Goals
+
+- Primary goal 1
+- Primary goal 2
+- Primary goal 3
+
+---
+
+## 3. Architecture
+
+Describe the high-level architecture:
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  Component  │────▶│  Component  │────▶│  Component  │
+└─────────────┘     └─────────────┘     └─────────────┘
+```
+
+### Architecture Pattern
+
+- [ ] Hexagonal (Ports & Adapters)
+- [ ] Clean Architecture
+- [ ] Microservices
+- [ ] Monolith
+- [ ] Other: _____________
+
+---
+
+## 4. Phases
+
+| Phase | Name | Description | Deliverables |
+|-------|------|-------------|--------------|
+| 0 | Setup | Project structure, dependencies | pyproject.toml, Dockerfile |
+| 1 | Core | Core functionality | src/domain/, src/application/ |
+| 2 | Adapters | External integrations | src/adapters/ |
+| 3 | Interface | User interface (CLI/API/Dashboard) | src/interfaces/ |
+| 4 | Tests | Test coverage | tests/ |
+
+---
+
+## 5. Stack
+
+### Core
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Python | 3.11+ | Runtime |
+| uv | latest | Package manager |
+
+### Data & Storage
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| PostgreSQL | 16+ | Primary database |
+| Redis | 7+ | Cache |
+
+### External APIs
+
+| API | Purpose |
+|-----|---------|
+| API 1 | Description |
+| API 2 | Description |
+
+---
+
+## 6. External Integrations
+
+List all external services, APIs, or dependencies:
+
+- **Service 1:** Description and purpose
+- **Service 2:** Description and purpose
+
+---
+
+## 7. Security Requirements
+
+- [ ] Authentication method: _____________
+- [ ] Authorization model: _____________
+- [ ] Data encryption: _____________
+- [ ] OWASP Top 10 compliance
+- [ ] Secrets management: _____________
+
+---
+
+## 8. Constraints
+
+- Must be exportable with `git clone + uv sync`
+- Must follow Python 2026 best practices
+- Test coverage > 80%
+- No hardcoded secrets or paths
+
+---
+
+## 9. Environment Variables
+
+```bash
+# Required
+API_KEY=
+DATABASE_URL=
+
+# Optional
+DEBUG=false
+LOG_LEVEL=INFO
+```
+
+---
+
+## 10. Success Criteria
+
+- [ ] All phases completed
+- [ ] Tests passing
+- [ ] Documentation complete
+- [ ] Security audit passed
+- [ ] Exportable and portable

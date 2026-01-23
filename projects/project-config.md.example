@@ -1,0 +1,73 @@
+# [PROJECT_NAME] - Configuration
+
+> **Path:** `~/[project-name]/`
+> **Type:** [CLI Tool | API | Dashboard | Library | Other]
+> **Status:** Active
+
+---
+
+## Specification
+
+**REQUIRED:** Before working on this project, read the specification:
+
+```
+docs/[project-name]-spec.md
+```
+
+---
+
+## Description
+
+One-paragraph description of the project.
+
+---
+
+## Stack
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Python | 3.11+ | Runtime |
+| uv | latest | Package manager |
+
+---
+
+## Progress
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| 0. Setup | Pending | Project structure |
+| 1. Core | Pending | Core functionality |
+| 2. Adapters | Pending | External integrations |
+| 3. Interface | Pending | CLI/API/Dashboard |
+| 4. Tests | Pending | Test coverage |
+
+---
+
+## Commands
+
+```bash
+# Setup
+cd ~/[project-name]
+uv sync
+
+# Run
+uv run [project-name] --help
+
+# Tests
+uv run pytest tests/ -v --cov=src
+
+# Linting
+uv run ruff check src tests
+uv run ruff format src tests
+
+# Type checking
+uv run mypy src
+```
+
+---
+
+## Notes
+
+- This file stays in the META-PROJECT, not in the generated project
+- The generated project must remain clean and exportable
+- Update progress as phases are completed
