@@ -1,0 +1,191 @@
+# SIOPV - Configuration
+
+> **Path:** `~/siopv/`
+> **Type:** Sistema de Orquestación (CLI + API + Dashboard)
+> **Deadline:** 1 de marzo de 2026
+
+---
+
+## Specification
+
+**REQUIRED:** Before working on this project, read the specification:
+
+```
+docs/SIOPV_Propuesta_Tecnica_v2.txt
+```
+
+---
+
+## Description
+
+Sistema Inteligente de Orquestación y Priorización de Vulnerabilidades para pipelines CI/CD.
+Implementa un pipeline híbrido ML + GenAI con 8 fases: Ingesta → RAG (CRAG) → ML Classification →
+Orchestration (LangGraph) → Authorization (OpenFGA) → Privacy (DLP) → Human-in-the-Loop → Output.
+
+---
+
+## Stack
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Python | 3.11+ | Runtime |
+| uv | latest | Package manager |
+| LangGraph | >=0.2.0 | AI orchestration |
+| Claude | Haiku 4.5 + Sonnet 4.5 | LLM reasoning |
+| XGBoost | >=2.0.0 | ML classification |
+| SHAP/LIME | latest | Explainability (XAI) |
+| ChromaDB | >=0.5.0 | Vector database (RAG) |
+| Presidio | >=2.2.0 | DLP sanitization |
+| OpenFGA | latest | Fine-grained authorization |
+| Streamlit | >=1.40.0 | Dashboard |
+| PostgreSQL | 16 | Database (checkpointing) |
+
+---
+
+## Progress
+
+### Phase 0: Setup ✅
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Project structure (hexagonal) | ✅ Completado | Created src/{domain,application,adapters,infrastructure,interfaces} |
+| pyproject.toml with dependencies | ✅ Completado | All SIOPV dependencies added |
+| Base files (exceptions, settings, logging) | ✅ Completado | Pydantic v2 + structlog |
+| CLI skeleton (Typer) | ✅ Completado | Basic commands structure |
+| Git + uv initialization | ✅ Completado | Repository initialized |
+
+### Phase 1: Ingesta y Preprocesamiento ⏳
+
+| Task | Status | Notes |
+|------|--------|-------|
+| VulnerabilityRecord entity (Pydantic v2) | ⏳ Pendiente | Domain model for CVE |
+| Trivy JSON parser | ⏳ Pendiente | Parse Results[].Vulnerabilities[] |
+| Map-Reduce deduplication | ⏳ Pendiente | Deduplicate by (cve_id, package, version) |
+| Batch processing by package | ⏳ Pendiente | Optimize LLM calls |
+| Unit tests | ⏳ Pendiente | Test parser + validation |
+
+### Phase 2: Enriquecimiento (Dynamic RAG) ⏳
+
+| Task | Status | Notes |
+|------|--------|-------|
+| NVD API client (httpx) | ⏳ Pendiente | Rate limiter + circuit breaker |
+| GitHub Security Advisories client | ⏳ Pendiente | GraphQL API integration |
+| EPSS API client | ⏳ Pendiente | Exploit prediction scores |
+| Tavily Search API client | ⏳ Pendiente | Fallback OSINT search |
+| ChromaDB adapter | ⏳ Pendiente | Hybrid persistence (SQLite + cache) |
+| CRAG pattern implementation | ⏳ Pendiente | Relevance evaluator + fallback |
+| Unit tests | ⏳ Pendiente | Mock APIs + ChromaDB |
+
+### Phase 3: Clasificación ML ⏳
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Dataset construction (CISA KEV) | ⏳ Pendiente | Download and process KEV catalog |
+| Feature engineering | ⏳ Pendiente | CVSS metrics + EPSS + temporal |
+| XGBoost training + Optuna | ⏳ Pendiente | Hyperparameter optimization |
+| SMOTE balancing | ⏳ Pendiente | Handle class imbalance |
+| SHAP global explanation | ⏳ Pendiente | Feature importance |
+| LIME local explanation | ⏳ Pendiente | Per-prediction explanations |
+| Model persistence | ⏳ Pendiente | Save/load trained model |
+| Unit tests | ⏳ Pendiente | Test inference + XAI |
+
+### Phase 4: Orquestación (LangGraph) ⏳
+
+| Task | Status | Notes |
+|------|--------|-------|
+| State schema (TypedDict/Pydantic) | ⏳ Pendiente | Graph state definition |
+| Nodes: ingestion, enrichment, classification | ⏳ Pendiente | Pure functions |
+| Uncertainty Trigger (adaptive threshold) | ⏳ Pendiente | ML vs LLM discrepancy |
+| Checkpointing (SQLite) | ⏳ Pendiente | Persist state between nodes |
+| Graph compilation + visualization | ⏳ Pendiente | LangGraph workflow |
+| Integration tests | ⏳ Pendiente | End-to-end pipeline |
+
+### Phase 5: Autorización (OpenFGA) ⏳
+
+| Task | Status | Notes |
+|------|--------|-------|
+| ReBAC model definition | ⏳ Pendiente | Define relations (user, project, vuln) |
+| OpenFGA adapter | ⏳ Pendiente | Check permissions |
+| Authorization gatekeeper node | ⏳ Pendiente | Integrate in LangGraph |
+| Unit tests | ⏳ Pendiente | Mock OpenFGA |
+
+### Phase 6: Privacidad (DLP) ⏳
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Presidio analyzer setup | ⏳ Pendiente | Detect PII/secrets |
+| Presidio anonymizer setup | ⏳ Pendiente | Redact sensitive data |
+| Claude Haiku semantic validator | ⏳ Pendiente | Contextual sanitization |
+| DLP guardrail node | ⏳ Pendiente | Dual-layer sanitization |
+| Unit tests | ⏳ Pendiente | Test detection + redaction |
+
+### Phase 7: Human-in-the-Loop ⏳
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Streamlit dashboard | ⏳ Pendiente | Display escalated cases |
+| Tríada de evidencia UI | ⏳ Pendiente | Summary + LIME plot + CoT log |
+| Polling mechanism (SQLite) | ⏳ Pendiente | Detect escalated cases |
+| Timeout escalation logic | ⏳ Pendiente | 4h → 8h → 24h auto-approval |
+| Unit tests | ⏳ Pendiente | Mock dashboard interactions |
+
+### Phase 8: Output (Acción y Auditoría) ⏳
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Jira adapter | ⏳ Pendiente | Create enriched tickets |
+| PDF report generator (FPDF2) | ⏳ Pendiente | Audit trail PDF |
+| Ticket enrichment (CVSS, EPSS, confidence) | ⏳ Pendiente | Custom Jira fields |
+| Output action node | ⏳ Pendiente | Final pipeline step |
+| Unit tests | ⏳ Pendiente | Mock Jira API |
+
+---
+
+## Commands
+
+```bash
+# Setup
+cd ~/siopv
+uv sync
+cp .env.example .env
+
+# Run CLI
+uv run siopv --help
+uv run siopv process-report trivy-report.json
+uv run siopv dashboard
+
+# Tests
+uv run pytest tests/ -v --cov=src
+
+# Linting
+uv run ruff check src tests
+uv run ruff format src tests
+
+# Type checking
+uv run mypy src
+```
+
+---
+
+## Timeline
+
+| Week | Dates | Phase | Deliverables |
+|------|-------|-------|--------------|
+| 1 | 26 ene - 1 feb | Phase 1 | Ingestion engine + tests |
+| 2 | 2-8 feb | Phase 2 | RAG (CRAG) + APIs integration |
+| 3 | 9-15 feb | Phase 3 | ML model + SHAP/LIME |
+| 4 | 16-22 feb | Phase 4 | LangGraph orchestration |
+| 5 | 23 feb - 1 mar | Phases 5-6 | OpenFGA + DLP |
+| 6 | 2-8 mar | Phases 7-8 | Dashboard + Output |
+
+**Current Status:** Phase 0 (Setup) completado. Starting Phase 1 (Ingestion).
+
+---
+
+## Notes
+
+- Este archivo queda en el META-PROYECTO, NO en ~/siopv/
+- El proyecto generado debe permanecer limpio y exportable
+- Actualizar progreso conforme se completan fases
+- Consultar Context7 ANTES de usar bibliotecas externas
+- Ejecutar agentes de verificación después de cada implementación

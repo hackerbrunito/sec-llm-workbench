@@ -16,7 +16,17 @@
       "Bash(mkdir:*)",
       "Bash(ls:*)",
       "Bash(docker:*)",
-      "Bash(docker-compose:*)"
+      "Bash(docker-compose:*)",
+      "Bash(whoami)",
+      "Bash(pwd)",
+      "Bash(cat:*)",
+      "Bash(tree:*)",
+      "Bash(env)",
+      "Bash(echo:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(touch:*)",
+      "Bash(date:*)"
     ],
     "deny": [
       "Bash(rm -rf /)",
@@ -33,6 +43,17 @@
           {
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-start.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre-write.sh"
           }
         ]
       }

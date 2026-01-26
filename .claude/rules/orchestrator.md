@@ -59,6 +59,194 @@ Si Claude detecta confusión o pérdida de contexto:
 
 ---
 
+## 0.5 SISTEMA ANTI-AUTOPILOT (CRÍTICO)
+
+**PROBLEMA IDENTIFICADO:**
+Claude tiene tendencia demostrada a entrar en "piloto automático", ignorando orchestrator y especificaciones, actuando basándose en entrenamiento obsoleto incluso después de que el usuario haya invertido tiempo creando documentación exhaustiva.
+
+**EVIDENCIA:**
+- errors-to-rules.md error 2026-01-26: "Piloto automático"
+- 2 intentos de implementación SIOPV, ambos ignorando docs
+- 10 días invertidos creando orchestrator + especificación, ambos ignorados
+
+### Sistema de 3 Capas (OBLIGATORIO)
+
+#### CAPA 1: Comando de Inicio Obligatorio
+
+**ANTES de trabajar en CUALQUIER proyecto, el usuario DEBE ejecutar:**
+
+```bash
+/project:start-[proyecto]-phase X
+```
+
+**Este comando FUERZA:**
+1. Lectura COMPLETA de orchestrator.md
+2. Lectura COMPLETA de especificación del proyecto
+3. Lectura COMPLETA de errors-to-rules.md
+4. Creación de checkpoints verificables en /tmp/
+5. Confirmación explícita del usuario antes de proceder
+
+**Claude NO puede empezar a trabajar sin este comando.**
+
+---
+
+#### CAPA 2: Hooks de Bloqueo Mecánico
+
+**Hook: `.claude/hooks/pre-write.sh`**
+
+Ejecuta ANTES de cada Write/Edit/NotebookEdit:
+
+```bash
+# Verifica checkpoints obligatorios
+if [ ! -f /tmp/claude-orchestrator-read-$(date +%Y%m%d) ]; then
+    echo "❌ BLOQUEADO: No has leído orchestrator hoy"
+    echo "Ejecuta: /project:start-[proyecto]-phase X"
+    exit 1
+fi
+
+if [ ! -f /tmp/claude-spec-read-$(date +%Y%m%d) ]; then
+    echo "❌ BLOQUEADO: No has leído especificación hoy"
+    echo "Ejecuta: /project:start-[proyecto]-phase X"
+    exit 1
+fi
+
+if [ ! -f /tmp/claude-errors-read-$(date +%Y%m%d) ]; then
+    echo "❌ BLOQUEADO: No has leído errors-to-rules hoy"
+    echo "Ejecuta: /project:start-[proyecto]-phase X"
+    exit 1
+fi
+```
+
+**BLOQUEO TÉCNICO AL 100%:** No puede usar Write/Edit sin checkpoints.
+
+---
+
+#### CAPA 3: Confirmación Humana Obligatoria
+
+**ANTES de CADA acción de modificación (Write/Edit/Bash que modifica archivos):**
+
+Claude DEBE:
+
+1. **ANUNCIAR** qué va a hacer:
+   ```
+   "Voy a [acción específica: crear pyproject.toml / editar settings.py / etc]"
+   ```
+
+2. **ESPECIFICAR** qué consultó:
+   ```
+   - Orchestrator sección: [número y tema]
+   - Especificación líneas: [líneas específicas consultadas]
+   - Context7 consulta: [query realizado o "no aplica"]
+   - Agentes a ejecutar después: [lista de agentes]
+   ```
+
+3. **ESPERAR** confirmación del usuario:
+   ```
+   "¿Confirmas que proceda?"
+   ```
+
+4. **SOLO ENTONCES** ejecutar la acción.
+
+**NUNCA ejecutar Write/Edit sin esta confirmación previa.**
+
+---
+
+### Verificación de Checkpoints
+
+**Checkpoints requeridos (creados por comando inicio):**
+
+```bash
+/tmp/claude-orchestrator-read-YYYYMMDD    # Leí orchestrator hoy
+/tmp/claude-spec-read-YYYYMMDD            # Leí especificación hoy
+/tmp/claude-errors-read-YYYYMMDD          # Leí errors-to-rules hoy
+/tmp/claude-context7-consulted-NNNN       # Consulté Context7 para acción NNNN
+```
+
+**Los hooks verifican estos checkpoints antes de CADA operación.**
+
+---
+
+### Flujo Obligatorio
+
+```
+Usuario: "/project:start-siopv-phase 0"
+    ↓
+Comando: Lee orchestrator completo
+Comando: Lee especificación completa
+Comando: Lee errors-to-rules completo
+Comando: Crea checkpoints en /tmp/
+Comando: "He leído todo. Fase 0: Setup. ¿Confirmas inicio?"
+    ↓
+Usuario: "Confirmado"
+    ↓
+Claude: "Voy a crear pyproject.toml.
+- Orchestrator: Sección 3 paso 1
+- Especificación: Líneas 200-250
+- Context7: Consultaré 'uv pyproject best practices'
+- Agentes: best-practices-enforcer, hallucination-detector
+¿Confirmas?"
+    ↓
+Usuario: "Confirmado"
+    ↓
+Claude: [Consulta Context7]
+Claude: [Usa Write para crear archivo]
+Hook: ✅ Checkpoints OK, permitir Write
+Claude: [Archivo creado]
+Claude: [Ejecuta best-practices-enforcer]
+Claude: [Ejecuta hallucination-detector]
+Claude: "Archivo creado y verificado. Siguiente paso..."
+```
+
+---
+
+### Por Qué Este Sistema es Necesario
+
+**La sección 0 "REFRESCO DE CONTEXTO" YA existe** con instrucciones claras:
+- "ANTES de cada tarea mayor: Releer projects/[proyecto].md, especificación, etc."
+- "DESPUÉS de invocar agente: Integrar feedback"
+- "CADA 3-5 tareas: Releer especificación"
+
+**Claude ignora sistemáticamente estas instrucciones.**
+
+**Razón:** Piloto automático. Actúa basándose en patrones de entrenamiento sin consultar memoria episódica.
+
+**Solución:** NO confiar en que Claude "recordará" seguir instrucciones. Forzar mecánicamente con:
+1. Comando que OBLIGA lectura
+2. Hooks que BLOQUEAN sin checkpoints
+3. Confirmación humana que VERIFICA comprensión
+
+---
+
+### Excepciones (NINGUNA)
+
+**NO hay excepciones a este sistema:**
+- ❌ "Esta tarea es simple, no necesito confirmación"
+- ❌ "Ya leí los docs ayer, no necesito releer"
+- ❌ "Solo es un cambio pequeño, no necesito Context7"
+
+**TODAS las acciones requieren:**
+- ✅ Checkpoints de lectura válidos (mismo día)
+- ✅ Anuncio + especificación de consultas
+- ✅ Confirmación del usuario
+
+---
+
+### Actualización del Principio Fundamental
+
+**MODIFICACIÓN:**
+
+```
+El usuario dice QUÉ quiere.
+Claude decide CÓMO (consultando orchestrator + especificación + Context7).
+Claude ANUNCIA qué hará y qué consultó.
+Claude ESPERA confirmación del usuario.
+Claude HACE (solo después de confirmación).
+```
+
+**El sistema Anti-Autopilot SOBRESCRIBE el principio "sin confirmaciones"** porque la evidencia demuestra que Claude no sigue instrucciones sin verificación externa forzada.
+
+---
+
 ## 1. TRIGGERS DE INICIO
 
 Cuando el usuario inicia una sesión, Claude DEBE detectar automáticamente qué hacer:
