@@ -1,3 +1,9 @@
+---
+name: xai-visualization
+description: "Explainable AI visualization patterns with SHAP and LIME for audit transparency"
+user-invocable: false
+---
+
 # Skill: XAI Visualization
 
 Visualización de explicabilidad con SHAP y LIME.

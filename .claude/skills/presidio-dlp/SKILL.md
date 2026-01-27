@@ -1,3 +1,9 @@
+---
+name: presidio-dlp
+description: "Data Loss Prevention patterns with Microsoft Presidio (PII detection, anonymization)"
+user-invocable: false
+---
+
 # Skill: Presidio DLP
 
 Data Loss Prevention con Microsoft Presidio.

@@ -70,7 +70,7 @@ Path(a) / b
 2. Identificar violaciones
 3. Corregir automaticamente si es posible
 4. Reportar violaciones que requieren revision manual
-5. Agregar regla a `memory-bank/@errors-to-rules.md` si es error nuevo
+5. Agregar regla a `.claude/docs/errors-to-rules.md` si es error nuevo
 
 ## Output
 

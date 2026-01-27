@@ -283,11 +283,6 @@ sec-llm-workbench-experiment/
 │       ├── trivy-integration/SKILL.md
 │       └── xai-visualization/SKILL.md
 │
-├── memory-bank/
-│   ├── @techniques.md
-│   ├── @python-standards.md
-│   └── @errors-to-rules.md
-│
 ├── .build/                            (gitignored - checkpoints locales)
 │   └── checkpoints/
 │       ├── daily/                     (orchestrator-read-YYYYMMDD, etc.)

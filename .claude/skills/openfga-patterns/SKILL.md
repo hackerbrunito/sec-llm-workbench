@@ -1,3 +1,9 @@
+---
+name: openfga-patterns
+description: "OpenFGA authorization patterns (ReBAC, relationship tuples, permission checks)"
+user-invocable: false
+---
+
 # Skill: OpenFGA Patterns
 
 Patrones de autorización con OpenFGA (ReBAC).

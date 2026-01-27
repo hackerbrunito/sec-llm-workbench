@@ -1,3 +1,9 @@
+---
+name: langraph-patterns
+description: "LangGraph 0.2+ implementation patterns (state graphs, nodes, checkpointing, human-in-the-loop)"
+user-invocable: false
+---
+
 # Skill: LangGraph Patterns
 
 Patrones de implementación para LangGraph 0.2+ (2026).

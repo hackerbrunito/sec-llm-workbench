@@ -11,7 +11,7 @@
 4. Follow `.claude/workflow/02-reflexion-loop.md`
 
 **YOU MUST** before commit:
-5. Execute `/verify` (runs 7 agents)
+5. Execute `/verify` (runs 5 verification agents)
 6. Follow `.claude/workflow/05-before-commit.md`
 
 **IMPORTANT** - Human checkpoints:
@@ -29,3 +29,4 @@
 | Auto decisions | `.claude/workflow/06-decisions.md` |
 | Python standards | `.claude/docs/python-standards.md` |
 | Error history | `.claude/docs/errors-to-rules.md` |
+| Techniques | `.claude/docs/techniques.md` |

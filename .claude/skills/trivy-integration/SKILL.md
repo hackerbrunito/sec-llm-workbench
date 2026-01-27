@@ -1,3 +1,9 @@
+---
+name: trivy-integration
+description: "Trivy scanner integration patterns for vulnerability ingestion and parsing"
+user-invocable: false
+---
+
 # Skill: Trivy Integration
 
 Integración con Trivy scanner para ingestión de vulnerabilidades.

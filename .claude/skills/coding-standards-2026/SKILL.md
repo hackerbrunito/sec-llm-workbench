@@ -1,3 +1,9 @@
+---
+name: coding-standards-2026
+description: "Python 2026 coding standards reference (type hints, Pydantic v2, httpx, structlog, pathlib)"
+user-invocable: false
+---
+
 # Skill: Python Coding Standards 2026
 
 Estándares de código Python actualizados a 2026.

@@ -108,7 +108,6 @@ claude
 │   └── hooks/                    # Scripts de enforcement
 │
 ├── templates/                    # Templates para proyectos nuevos
-├── memory-bank/                  # Técnicas y estándares
 ├── docs/                         # Especificaciones de proyectos
 │   └── project-spec.md.example   # Plantilla de especificación
 └── projects/                     # Configuración por proyecto
@@ -314,7 +313,6 @@ claude
 │   └── hooks/                    # Enforcement scripts
 │
 ├── templates/                    # Templates for new projects
-├── memory-bank/                  # Techniques and standards
 ├── docs/                         # Project specifications
 │   └── project-spec.md.example   # Specification template
 └── projects/                     # Per-project configuration
