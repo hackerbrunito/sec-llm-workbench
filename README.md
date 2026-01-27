@@ -101,10 +101,11 @@ claude
 ├── .claude/
 │   ├── settings.json             # Permisos y hooks
 │   ├── rules/
-│   │   └── orchestrator.md       # Flujo autónomo (auto-load)
+│   │   └── core-rules.md        # Reglas core (auto-load)
+│   ├── workflow/                  # Flujo autónomo (6 archivos, on-demand)
+│   ├── docs/                     # Estándares y errores (on-demand)
 │   ├── agents/                   # 7 agentes con YAML frontmatter
-│   ├── commands/                 # 6 slash commands
-│   ├── skills/                   # 7 skills con SKILL.md
+│   ├── skills/                   # 14 skills con SKILL.md (7 commands + 7 patterns)
 │   └── hooks/                    # Scripts de enforcement
 │
 ├── templates/                    # Templates para proyectos nuevos
@@ -306,10 +307,11 @@ claude
 ├── .claude/
 │   ├── settings.json             # Permissions and hooks
 │   ├── rules/
-│   │   └── orchestrator.md       # Autonomous flow (auto-load)
+│   │   └── core-rules.md        # Core rules (auto-load)
+│   ├── workflow/                  # Autonomous flow (6 files, on-demand)
+│   ├── docs/                     # Standards and errors (on-demand)
 │   ├── agents/                   # 7 agents with YAML frontmatter
-│   ├── commands/                 # 6 slash commands
-│   ├── skills/                   # 7 skills with SKILL.md
+│   ├── skills/                   # 14 skills with SKILL.md (7 commands + 7 patterns)
 │   └── hooks/                    # Enforcement scripts
 │
 ├── templates/                    # Templates for new projects
