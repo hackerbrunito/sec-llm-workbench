@@ -93,9 +93,9 @@ DESPUES (56 lineas auto-cargadas):
 
 | Hook | Archivo | Funcion |
 |------|---------|---------|
-| PostToolUse (Write/Edit) | `post-code.sh` | Crea marker en `/tmp/claude-pending-verification/` por cada .py editado. Tambien ejecuta ruff format + check |
+| PostToolUse (Write/Edit) | `post-code.sh` | Crea marker en `.build/checkpoints/pending/` por cada .py editado. Tambien ejecuta ruff format + check |
 | PreToolUse (Bash) | `pre-git-commit.sh` | Bloquea `git commit` si hay markers pendientes |
-| Comando `/verify` | `verify.md` | Ejecuta los 5 agentes y limpia markers |
+| Comando `/verify` | `verify/SKILL.md` | Ejecuta los 5 agentes y limpia markers |
 
 **Flujo:**
 ```
@@ -190,7 +190,7 @@ rm -rf .build/checkpoints/daily/*
 # Ejecutar hook con input simulado
 echo '{"tool_name": "Write", "tool_input": {"file_path": "test.py"}}' | .claude/hooks/pre-write.sh
 
-# Debe devolver JSON con "decision": "ask" y "additionalContext": "..."
+# Debe devolver JSON con "permissionDecision": "ask" y "additionalContext": "..."
 ```
 
 **Estado:** PENDIENTE
@@ -205,7 +205,7 @@ echo '{"tool_name": "Write", "tool_input": {"file_path": "test.py"}}' | .claude/
 2. Ejecutar `/init-session`
 3. Verificar que:
    - Lee documentacion completa (orchestrator, spec, errors-to-rules)
-   - Crea checkpoints en /tmp/
+   - Crea checkpoints en .build/checkpoints/daily/
    - Anuncia comprension
    - Espera confirmacion
 4. Intentar Write/Edit de un .py:
