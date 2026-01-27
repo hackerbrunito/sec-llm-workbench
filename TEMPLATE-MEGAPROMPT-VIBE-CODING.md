@@ -1,7 +1,7 @@
 # PLANTILLA: META-PROYECTO + PROYECTO con Vibe Coding 2026
 
-> **Versión:** 1.2
-> **Fecha:** 2026-01-27
+> **Versión:** 1.3
+> **Fecha:** 2026-01-27 (audit update)
 > **Uso:** Copiar esta plantilla para iniciar cualquier proyecto nuevo con Vibe Coding
 > **Incluye:** Docker multi-stage, DevContainers para VS Code
 
@@ -57,15 +57,15 @@ db_name         = project_name | lower | replace(' ', '_')  → "my_security_app
 .claude/
 ├── settings.json              # Permisos y configuración
 ├── hooks/                     # Scripts automáticos
-│   ├── pre-commit.sh
-│   ├── post-code.sh
+│   ├── pre-write.sh           # additionalContext middleware
+│   ├── post-code.sh           # ruff + verification markers
+│   ├── pre-git-commit.sh      # Block commit without verification
+│   ├── pre-commit.sh          # Pre-commit checks (standalone)
 │   └── verify-best-practices.sh
 ├── git-workflow.md            # Workflow de Git
 ├── agents/                    # Subagentes (personalizar por proyecto)
 │   └── [agentes-del-proyecto].md
-├── commands/                  # Slash commands (personalizar por proyecto)
-│   └── [comandos-del-proyecto].md
-└── skills/                    # Skills (personalizar por proyecto)
+└── skills/                    # Skills con SKILL.md (commands + patterns)
     └── [skills-del-proyecto]/SKILL.md
 ```
 
@@ -154,7 +154,7 @@ db_name         = project_name | lower | replace(' ', '_')  → "my_security_app
 ## 1.3 PLANTILLA: hooks/pre-commit.sh
 
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 # =============================================================================
 # Pre-Commit Hook - Verificación antes de cada commit
 # =============================================================================
@@ -190,7 +190,7 @@ echo "✅ Pre-commit completado"
 ## 1.4 PLANTILLA: hooks/post-code.sh
 
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 # =============================================================================
 # Post-Code Hook - Después de generar código
 # =============================================================================
@@ -216,7 +216,7 @@ echo "✅ Post-code completado"
 ## 1.5 PLANTILLA: hooks/verify-best-practices.sh
 
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 # =============================================================================
 # Verificar Best Practices Python 2026
 # =============================================================================
@@ -264,7 +264,7 @@ echo "✅ Best practices OK"
 ### HACER Automáticamente (sin preguntar)
 - git add . (después de verificaciones)
 - git commit -m "tipo(scope): descripción"
-- Incluir Co-Authored-By
+- NUNCA incluir Co-Authored-By en proyectos públicos generados
 
 ### NUNCA Hacer
 - git push (sin confirmación)
@@ -282,8 +282,6 @@ echo "✅ Best practices OK"
 ### Formato
 ```
 tipo(scope): descripción corta
-
-Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 ```
 
@@ -349,11 +347,6 @@ allowed-tools:
 ├── .env.example               # Variables de entorno (plantilla)
 │
 ├── .claude/                   # META-PROYECTO (ver Parte 1)
-│
-├── memory-bank/               # Contexto persistente
-│   ├── @architecture.md       # Arquitectura del proyecto
-│   ├── @progress.md           # Estado actual
-│   └── @decisions.md          # Decisiones arquitectónicas
 │
 ├── src/
 │   ├── __init__.py
@@ -533,9 +526,8 @@ uv run {{ main_command }}
 ---
 
 ## Referencias
-- `memory-bank/@architecture.md`
-- `memory-bank/@progress.md`
-- `memory-bank/@decisions.md`
+- `.claude/docs/errors-to-rules.md`
+- `.claude/workflow/` (autonomous flow)
 ```
 
 ---
@@ -569,24 +561,15 @@ dependencies = [
     "rich>=13.7",
 ]
 
-[project.optional-dependencies]
+[project.scripts]
+{{ project_slug }} = "src.cli:app"
+
+[dependency-groups]
 dev = [
     "pytest>=8.0",
     "pytest-cov>=4.1",
     "pytest-asyncio>=0.23",
-    "ruff>=0.1.9",
-    "mypy>=1.8",
-]
-
-[project.scripts]
-{{ project_slug }} = "src.cli:app"
-
-[tool.uv]
-dev-dependencies = [
-    "pytest>=8.0",
-    "pytest-cov>=4.1",
-    "pytest-asyncio>=0.23",
-    "ruff>=0.1.9",
+    "ruff>=0.14",
     "mypy>=1.8",
 ]
 
@@ -596,7 +579,7 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "B", "C4", "UP", "ARG", "SIM", "TCH", "PTH", "PL", "RUF", "S", "ANN"]
-ignore = ["E501", "ANN101", "ANN102"]
+ignore = ["E501", "B008", "PLR0913", "PLR2004"]
 
 [tool.mypy]
 python_version = "3.11"
@@ -614,144 +597,9 @@ build-backend = "hatchling.build"
 
 ---
 
-## 2.4 PLANTILLA: memory-bank/@architecture.md
+## 2.4-2.6 memory-bank/ (DEPRECADO)
 
-```markdown
-# {{ project_name }} Architecture
-
-## Visión General
-
-{{ architecture_description }}
-
----
-
-## Diagrama
-
-```
-{{ ascii_diagram }}
-```
-
----
-
-## Componentes
-
-| Componente | Responsabilidad | Tecnología |
-|------------|-----------------|------------|
-| {{ component_1 }} | {{ responsibility_1 }} | {{ tech_1 }} |
-| {{ component_2 }} | {{ responsibility_2 }} | {{ tech_2 }} |
-
----
-
-## Flujo de Datos
-
-```
-{{ data_flow }}
-```
-
----
-
-## Integraciones Externas
-
-- {{ api_1 }}
-- {{ api_2 }}
-```
-
----
-
-## 2.5 PLANTILLA: memory-bank/@progress.md
-
-```markdown
-# {{ project_name }} Progress Tracker
-
-## Estado Actual
-
-**Fase Actual:** {{ current_phase }}
-**Última Actualización:** {{ date }}
-**Siguiente Paso:** {{ next_step }}
-
----
-
-## Progreso
-
-### {{ phase_1_name }} {{ status }}
-- [ ] {{ task_1 }}
-- [ ] {{ task_2 }}
-
-### {{ phase_2_name }} {{ status }}
-- [ ] {{ task_1 }}
-- [ ] {{ task_2 }}
-
----
-
-## Métricas
-
-| Métrica | Valor | Target |
-|---------|-------|--------|
-| Test Coverage | 0% | 80% |
-| Linting | N/A | 0 errors |
-| Type Checking | N/A | 0 errors |
-
----
-
-## Setup
-
-```bash
-uv sync
-uv run pytest
-```
-
----
-
-## Historial
-
-### {{ date }}
-- {{ change_1 }}
-- {{ change_2 }}
-```
-
----
-
-## 2.6 PLANTILLA: memory-bank/@decisions.md
-
-```markdown
-# {{ project_name }} Architectural Decisions
-
----
-
-## ADR-001: {{ title }}
-
-**Estado:** Aceptado
-**Fecha:** {{ date }}
-**Contexto:** {{ context }}
-
-### Opciones Consideradas
-
-1. **{{ option_1 }}**
-   - Pros: {{ pros }}
-   - Cons: {{ cons }}
-
-2. **{{ option_2 }}**
-   - Pros: {{ pros }}
-   - Cons: {{ cons }}
-
-### Decisión
-
-**{{ decision }}** porque:
-- {{ reason_1 }}
-- {{ reason_2 }}
-
-### Consecuencias
-
-- {{ consequence_1 }}
-- {{ consequence_2 }}
-
----
-
-## Decisiones Pendientes
-
-- [ ] {{ pending_decision_1 }}
-- [ ] {{ pending_decision_2 }}
-```
+> **NOTA:** El concepto de `memory-bank/` fue reemplazado por el sistema de workflow en `.claude/workflow/` y docs en `.claude/docs/`. Los errores se registran en `errors-to-rules.md`, la arquitectura se documenta en la especificación del proyecto, y el progreso se gestiona via Claude Code tasks y checkpoints.
 
 ---
 
@@ -855,8 +703,7 @@ cd {{ project_name }}
 git init
 
 # 3. Crear estructura
-mkdir -p .claude/{hooks,agents,commands,skills}
-mkdir -p memory-bank
+mkdir -p .claude/{hooks,agents,skills,workflow,docs,rules}
 mkdir -p src
 mkdir -p tests/{unit,integration}
 mkdir -p docs data
@@ -868,7 +715,6 @@ touch CLAUDE.md
 touch .claude/settings.json
 touch .claude/git-workflow.md
 touch .claude/hooks/{pre-commit.sh,post-code.sh,verify-best-practices.sh}
-touch memory-bank/{@architecture.md,@progress.md,@decisions.md}
 touch src/__init__.py
 touch tests/__init__.py tests/conftest.py
 ```
@@ -879,10 +725,9 @@ touch tests/__init__.py tests/conftest.py
 2. [ ] Editar `pyproject.toml` con dependencias específicas
 3. [ ] Editar `.claude/settings.json` con nombre del proyecto
 4. [ ] Crear subagentes específicos en `.claude/agents/`
-5. [ ] Crear commands específicos en `.claude/commands/`
-6. [ ] Crear skills específicos en `.claude/skills/`
-7. [ ] Documentar arquitectura en `memory-bank/@architecture.md`
-8. [ ] Documentar decisiones en `memory-bank/@decisions.md`
+5. [ ] Crear skills específicos en `.claude/skills/`
+6. [ ] Crear workflow files en `.claude/workflow/`
+7. [ ] Crear errors-to-rules en `.claude/docs/`
 
 ## 3.3 Inicializar
 
@@ -927,10 +772,9 @@ git commit -m "chore: initial project setup with Vibe Coding 2026"
 | Componente | Crear nuevo |
 |------------|-------------|
 | Subagentes | Específicos del dominio |
-| Commands | Específicos del proyecto |
 | Skills | Específicos del proyecto |
-| @architecture.md | Diagrama del proyecto |
-| @decisions.md | ADRs del proyecto |
+| Workflow | Flujo autónomo del proyecto |
+| Docs | Estándares y errores |
 | src/ | Todo el código |
 
 ---
@@ -955,18 +799,7 @@ LABEL description="{{ project_description }}"
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
-
-# Install uv
-RUN pip install uv
+    PYTHONDONTWRITEBYTECODE=1
 
 # Set working directory
 WORKDIR /app
@@ -976,11 +809,18 @@ WORKDIR /app
 # -----------------------------------------------------------------------------
 FROM base AS builder
 
+# Copy uv from official image
+COPY --from=ghcr.io/astral-sh/uv:0.9.27 /uv /uvx /bin/
+
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
+
 # Copy dependency files
 COPY pyproject.toml uv.lock* ./
 
-# Create virtual environment and install dependencies
-RUN uv sync --no-dev
+# Install dependencies with cache mount
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev --no-install-project
 
 # -----------------------------------------------------------------------------
 # Production stage: Minimal image for production
@@ -1100,8 +940,8 @@ docker-compose*.yml
 # Claude Code
 .claude/
 
-# Memory bank
-memory-bank/
+# Build artifacts
+.build/
 
 # Temporary files
 *.tmp
@@ -1388,8 +1228,8 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv globally
-RUN pip install uv
+# Install uv from official image
+COPY --from=ghcr.io/astral-sh/uv:0.9.27 /uv /uvx /bin/
 
 # Set working directory
 WORKDIR /app
@@ -1439,13 +1279,14 @@ CMD ["sleep", "infinity"]
 │
 ├── .claude/                   # META-PROYECTO
 │   ├── settings.json
+│   ├── rules/
+│   ├── workflow/
+│   ├── docs/
 │   ├── hooks/
 │   ├── git-workflow.md
 │   ├── agents/
-│   ├── commands/
 │   └── skills/
 │
-├── memory-bank/
 ├── src/
 ├── tests/
 ├── docs/

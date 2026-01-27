@@ -142,7 +142,7 @@ claude
 Trigger
    │
    ▼
-Cargar CLAUDE.md + orchestrator.md (automático)
+Cargar CLAUDE.md + workflow/ (automático)
    │
    ▼
 Leer projects/[proyecto].md
@@ -194,7 +194,7 @@ Detectar estado actual
 
 ## Self-Correcting
 
-Los errores se documentan automáticamente en `CLAUDE.md` tabla "ERRORES PASADOS → REGLAS" para no repetirlos.
+Los errores se documentan automáticamente en `.claude/docs/errors-to-rules.md` para no repetirlos.
 
 ## Autor
 
@@ -348,7 +348,7 @@ claude
 Trigger
    │
    ▼
-Load CLAUDE.md + orchestrator.md (automatic)
+Load CLAUDE.md + workflow/ (automatic)
    │
    ▼
 Read projects/[project].md
@@ -400,7 +400,7 @@ Detect current state
 
 ## Self-Correcting
 
-Errors are automatically documented in `CLAUDE.md` table "PAST ERRORS → RULES" to prevent repetition.
+Errors are automatically documented in `.claude/docs/errors-to-rules.md` to prevent repetition.
 
 ## Author
 

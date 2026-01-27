@@ -12,7 +12,7 @@ TODAY=$(date +%Y%m%d)
 MISSING_DOCS=()
 
 if [[ ! -f "${CLAUDE_PROJECT_DIR:-.}/.build/checkpoints/daily/orchestrator-read-${TODAY}" ]]; then
-    MISSING_DOCS+=("orchestrator.md")
+    MISSING_DOCS+=("workflow docs")
 fi
 
 if [[ ! -f "${CLAUDE_PROJECT_DIR:-.}/.build/checkpoints/daily/spec-read-${TODAY}" ]]; then

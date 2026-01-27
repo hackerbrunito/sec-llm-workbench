@@ -8,7 +8,7 @@ Workflow de Git para el framework Vibe Coding y proyectos generados.
 
 ```
 <meta-proyecto>/                 ~/<proyecto>/
-├── .git/ ──► github/vibe-coding ├── .git/ ──► github/<proyecto>
+├── .git/ ──► github/<meta-repo> ├── .git/ ──► github/<proyecto>
 │   (privado)                    │   (público)
 ```
 
@@ -20,10 +20,10 @@ Workflow de Git para el framework Vibe Coding y proyectos generados.
 ```bash
 # Después de implementar feature completa
 git add .
-git commit -m "tipo(scope): descripción
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
+git commit -m "tipo(scope): descripción"
 ```
+
+> **IMPORTANTE:** NUNCA incluir `Co-Authored-By` ni referencias a Claude/AI en commits de proyectos públicos generados. Solo en el meta-proyecto privado si el usuario lo solicita.
 
 ### NUNCA Hacer (sin confirmación explícita)
 ```bash
@@ -41,8 +41,6 @@ git rebase -i               # PROHIBIDO
 tipo(scope): descripción corta (máx 72 chars)
 
 [cuerpo opcional - explicar el por qué]
-
-Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ### Tipos
@@ -156,9 +154,9 @@ gh pr create --title "feat: <description>" --body "..."
 El META-PROYECTO tiene su propio .git:
 
 ```bash
-cd ~/vibe-coding  # Tu directorio del META-PROYECTO
+cd ~/<meta-proyecto>  # Tu directorio del META-PROYECTO
 git init
-git remote add origin git@github.com:<your-username>/vibe-coding.git
+git remote add origin git@github.com:<your-username>/<meta-repo>.git
 
 # Commits del META-PROYECTO
 git add .
