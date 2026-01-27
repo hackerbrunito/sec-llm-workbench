@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # =============================================================================
 # Post-Code Hook - META-PROYECTO
 # =============================================================================
@@ -61,7 +61,7 @@ VERIFICATION_DIR="${CLAUDE_PROJECT_DIR:-.}/.build/checkpoints/pending"
 mkdir -p "$VERIFICATION_DIR"
 
 # Crear marker con hash del archivo para tracking
-FILE_HASH=$(echo "$FILE_PATH" | md5 | cut -c1-8)
+FILE_HASH=$(echo "$FILE_PATH" | if command -v md5sum &>/dev/null; then md5sum; else md5; fi | cut -c1-8)
 MARKER_FILE="$VERIFICATION_DIR/$FILE_HASH"
 
 # Guardar info del archivo pendiente

@@ -1,6 +1,7 @@
 ---
 name: generate-report
 description: "Generar reporte de auditoria en PDF con explicabilidad XAI"
+argument-hint: "[options]"
 disable-model-invocation: true
 ---
 

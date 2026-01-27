@@ -1,6 +1,7 @@
 ---
 name: new-project
 description: "Crea un nuevo proyecto Python profesional con arquitectura hexagonal"
+argument-hint: "[name] [path]"
 disable-model-invocation: true
 ---
 

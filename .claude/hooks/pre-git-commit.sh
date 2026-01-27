@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Pre-Git-Commit Hook - Bloquea commit si hay archivos sin verificar
 # Este hook se ejecuta ANTES de cualquier comando Bash
 # Solo actua si el comando es "git commit"

@@ -1,6 +1,7 @@
 ---
 name: research-cve
 description: "Investigar un CVE especifico usando multiples fuentes OSINT"
+argument-hint: "[CVE-ID]"
 disable-model-invocation: true
 ---
 

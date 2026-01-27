@@ -1,6 +1,7 @@
 ---
 name: run-tests
 description: "Ejecutar suite de tests con cobertura y reportes"
+argument-hint: "[scope]"
 disable-model-invocation: true
 ---
 
