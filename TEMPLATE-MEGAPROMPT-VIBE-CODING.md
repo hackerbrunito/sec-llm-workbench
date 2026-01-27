@@ -1,9 +1,51 @@
 # PLANTILLA: META-PROYECTO + PROYECTO con Vibe Coding 2026
 
-> **Versión:** 1.1
-> **Fecha:** 2026-01-21
+> **Versión:** 1.2
+> **Fecha:** 2026-01-27
 > **Uso:** Copiar esta plantilla para iniciar cualquier proyecto nuevo con Vibe Coding
 > **Incluye:** Docker multi-stage, DevContainers para VS Code
+
+---
+
+## Placeholder Conventions
+
+All placeholders in this template follow the [Cookiecutter/Jinja2 standard](https://cookiecutter.readthedocs.io/en/stable/advanced/templates_in_context.html): **lowercase_snake_case** inside double curly braces with spaces.
+
+### Variable Registry
+
+| Variable | Description | Example value |
+|----------|-------------|---------------|
+| `{{ project_name }}` | Human-readable project name | `My Security App` |
+| `{{ project_slug }}` | Lowercase, hyphenated (for packages, dirs, URLs) | `my-security-app` |
+| `{{ project_description }}` | One-line project description | `AI-powered vulnerability scanner` |
+| `{{ project_type }}` | Project type | `CLI Tool`, `API`, `Dashboard` |
+| `{{ author_name }}` | Author full name | `Jane Doe` |
+| `{{ author_email }}` | Author email | `jane@example.com` |
+| `{{ github_user }}` | GitHub username | `janedoe` |
+| `{{ main_command }}` | CLI entrypoint command | `my-security-app` |
+| `{{ app_port }}` | Application port | `8000` |
+| `{{ db_user }}` | Database username | `postgres` |
+| `{{ db_password }}` | Database password | `postgres` |
+| `{{ db_name }}` | Database name | `my_security_app` |
+
+### Derived Values
+
+Following the Cookiecutter pattern, some values derive from others:
+
+```
+project_name    = "My Security App"
+project_slug    = project_name | lower | replace(' ', '-')  → "my-security-app"
+db_name         = project_name | lower | replace(' ', '_')  → "my_security_app"
+```
+
+### Convention Rules
+
+| Context | Convention | Example |
+|---------|-----------|---------|
+| `.template` files | `{{ lowercase_snake_case }}` | `{{ project_name }}` |
+| Documentation (non-template) | `<angle-brackets>` for example values | `<your-username>` |
+| Documentation (triggers) | `[UPPER_CASE]` for user-substituted values | `[PROJECT]` |
+| Bash scripts | `${VARIABLE}` for environment variables | `${CLAUDE_PROJECT_DIR}` |
 
 ---
 
@@ -34,10 +76,10 @@
 ```json
 {
   "project": {
-    "name": "{{NOMBRE_PROYECTO}}",
-    "description": "{{DESCRIPCIÓN}}",
+    "name": "{{ project_name }}",
+    "description": "{{ project_description }}",
     "version": "0.1.0",
-    "author": "{{AUTOR}}"
+    "author": "{{ author_name }}"
   },
   "permissions": {
     "allow": [
@@ -250,9 +292,9 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ## 1.7 PLANTILLA: Subagente Genérico
 
 ```markdown
-# {{NOMBRE}} Agent
+# {{ agent_name }} Agent
 
-{{DESCRIPCIÓN}}
+{{ project_description }}
 
 ---
 
@@ -260,9 +302,9 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 Cuando este agente sea invocado, **DEBE ejecutar automáticamente**:
 
-1. {{ACCIÓN_1}}
-2. {{ACCIÓN_2}}
-3. {{ACCIÓN_3}}
+1. {{ action_1 }}
+2. {{ action_2 }}
+3. {{ action_3 }}
 
 **NUNCA preguntar** para acciones estándar.
 **SIEMPRE corregir** automáticamente si es posible.
@@ -272,8 +314,8 @@ Cuando este agente sea invocado, **DEBE ejecutar automáticamente**:
 ## Configuración
 
 ```yaml
-name: {{nombre-kebab}}
-description: {{descripción}}
+name: {{ agent_slug }}
+description: {{ description }}
 allowed-tools:
   - Read
   - Edit
@@ -285,12 +327,12 @@ allowed-tools:
 ```
 
 ## Checklist
-- [ ] {{item_1}}
-- [ ] {{item_2}}
+- [ ] {{ checklist_item_1 }}
+- [ ] {{ checklist_item_2 }}
 
 ## Output
-- `✅ {{NOMBRE}} PASSED`
-- `❌ {{NOMBRE}} FAILED` - Con detalles
+- `✅ {{ agent_name }} PASSED`
+- `❌ {{ agent_name }} FAILED` - Con detalles
 ```
 
 ---
@@ -300,7 +342,7 @@ allowed-tools:
 ## 2.1 Estructura de Directorios del PROYECTO
 
 ```
-{{NOMBRE_PROYECTO}}/
+{{ project_name }}/
 ├── CLAUDE.md                  # Instrucciones principales
 ├── pyproject.toml             # Dependencias (uv)
 ├── .gitignore
@@ -315,7 +357,7 @@ allowed-tools:
 │
 ├── src/
 │   ├── __init__.py
-│   └── {{módulos}}/           # Módulos del proyecto
+│   └── {{ modules }}/           # Módulos del proyecto
 │
 ├── tests/
 │   ├── __init__.py
@@ -332,10 +374,10 @@ allowed-tools:
 ## 2.2 PLANTILLA: CLAUDE.md
 
 ```markdown
-# {{NOMBRE_PROYECTO}}
+# {{ project_name }}
 
-> **Autor:** {{AUTOR}}
-> **Tipo:** {{TIPO_PROYECTO}}
+> **Autor:** {{ author_name }}
+> **Tipo:** {{ project_type }}
 
 ---
 
@@ -443,7 +485,7 @@ Excepciones:
 
 ## Arquitectura
 
-{{DIAGRAMA_ARQUITECTURA}}
+{{ architecture_diagram }}
 
 ---
 
@@ -455,20 +497,20 @@ Excepciones:
 - ruff (linter + formatter)
 - mypy (type checker)
 
-### {{CATEGORÍA_1}}
-- {{tecnología_1}}
-- {{tecnología_2}}
+### {{ category_1 }}
+- {{ technology_1 }}
+- {{ technology_2 }}
 
-### {{CATEGORÍA_2}}
-- {{tecnología_3}}
-- {{tecnología_4}}
+### {{ category_2 }}
+- {{ technology_3 }}
+- {{ technology_4 }}
 
 ---
 
 ## Estructura del Proyecto
 
 ```
-{{ESTRUCTURA_DIRECTORIOS}}
+{{ directory_structure }}
 ```
 
 ---
@@ -485,7 +527,7 @@ uv run ruff check src
 uv run mypy src
 
 # Ejecutar
-uv run {{comando_principal}}
+uv run {{ main_command }}
 ```
 
 ---
@@ -502,13 +544,13 @@ uv run {{comando_principal}}
 
 ```toml
 [project]
-name = "{{nombre-proyecto}}"
+name = "{{ project_slug }}"
 version = "0.1.0"
-description = "{{Descripción del proyecto}}"
+description = "{{ project_description }}"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
-    {name = "{{Autor}}", email = "{{email}}"}
+    {name = "{{ author_name }}", email = "{{ author_email }}"}
 ]
 
 dependencies = [
@@ -516,8 +558,8 @@ dependencies = [
     "pydantic>=2.5",
     "pydantic-settings>=2.1",
 
-    # {{CATEGORÍA}}
-    # "{{dependencia}}>=X.Y",
+    # {{ category }}
+    # "{{ dependency }}>=X.Y",
 
     # Utilities
     "structlog>=24.1",
@@ -537,7 +579,7 @@ dev = [
 ]
 
 [project.scripts]
-{{nombre}} = "src.cli:app"
+{{ project_slug }} = "src.cli:app"
 
 [tool.uv]
 dev-dependencies = [
@@ -575,18 +617,18 @@ build-backend = "hatchling.build"
 ## 2.4 PLANTILLA: memory-bank/@architecture.md
 
 ```markdown
-# {{NOMBRE_PROYECTO}} Architecture
+# {{ project_name }} Architecture
 
 ## Visión General
 
-{{DESCRIPCIÓN_ARQUITECTURA}}
+{{ architecture_description }}
 
 ---
 
 ## Diagrama
 
 ```
-{{DIAGRAMA_ASCII}}
+{{ ascii_diagram }}
 ```
 
 ---
@@ -595,23 +637,23 @@ build-backend = "hatchling.build"
 
 | Componente | Responsabilidad | Tecnología |
 |------------|-----------------|------------|
-| {{comp_1}} | {{resp_1}} | {{tech_1}} |
-| {{comp_2}} | {{resp_2}} | {{tech_2}} |
+| {{ component_1 }} | {{ responsibility_1 }} | {{ tech_1 }} |
+| {{ component_2 }} | {{ responsibility_2 }} | {{ tech_2 }} |
 
 ---
 
 ## Flujo de Datos
 
 ```
-{{FLUJO_DATOS}}
+{{ data_flow }}
 ```
 
 ---
 
 ## Integraciones Externas
 
-- {{API_1}}
-- {{API_2}}
+- {{ api_1 }}
+- {{ api_2 }}
 ```
 
 ---
@@ -619,25 +661,25 @@ build-backend = "hatchling.build"
 ## 2.5 PLANTILLA: memory-bank/@progress.md
 
 ```markdown
-# {{NOMBRE_PROYECTO}} Progress Tracker
+# {{ project_name }} Progress Tracker
 
 ## Estado Actual
 
-**Fase Actual:** {{FASE}}
-**Última Actualización:** {{FECHA}}
-**Siguiente Paso:** {{SIGUIENTE}}
+**Fase Actual:** {{ current_phase }}
+**Última Actualización:** {{ date }}
+**Siguiente Paso:** {{ next_step }}
 
 ---
 
 ## Progreso
 
-### {{Fase 1}} {{STATUS}}
-- [ ] {{tarea_1}}
-- [ ] {{tarea_2}}
+### {{ phase_1_name }} {{ status }}
+- [ ] {{ task_1 }}
+- [ ] {{ task_2 }}
 
-### {{Fase 2}} {{STATUS}}
-- [ ] {{tarea_1}}
-- [ ] {{tarea_2}}
+### {{ phase_2_name }} {{ status }}
+- [ ] {{ task_1 }}
+- [ ] {{ task_2 }}
 
 ---
 
@@ -662,9 +704,9 @@ uv run pytest
 
 ## Historial
 
-### {{FECHA}}
-- {{cambio_1}}
-- {{cambio_2}}
+### {{ date }}
+- {{ change_1 }}
+- {{ change_2 }}
 ```
 
 ---
@@ -672,43 +714,43 @@ uv run pytest
 ## 2.6 PLANTILLA: memory-bank/@decisions.md
 
 ```markdown
-# {{NOMBRE_PROYECTO}} Architectural Decisions
+# {{ project_name }} Architectural Decisions
 
 ---
 
-## ADR-001: {{TÍTULO}}
+## ADR-001: {{ title }}
 
 **Estado:** Aceptado
-**Fecha:** {{FECHA}}
-**Contexto:** {{CONTEXTO}}
+**Fecha:** {{ date }}
+**Contexto:** {{ context }}
 
 ### Opciones Consideradas
 
-1. **{{Opción 1}}**
-   - Pros: {{pros}}
-   - Cons: {{cons}}
+1. **{{ option_1 }}**
+   - Pros: {{ pros }}
+   - Cons: {{ cons }}
 
-2. **{{Opción 2}}**
-   - Pros: {{pros}}
-   - Cons: {{cons}}
+2. **{{ option_2 }}**
+   - Pros: {{ pros }}
+   - Cons: {{ cons }}
 
 ### Decisión
 
-**{{DECISIÓN}}** porque:
-- {{razón_1}}
-- {{razón_2}}
+**{{ decision }}** porque:
+- {{ reason_1 }}
+- {{ reason_2 }}
 
 ### Consecuencias
 
-- {{consecuencia_1}}
-- {{consecuencia_2}}
+- {{ consequence_1 }}
+- {{ consequence_2 }}
 
 ---
 
 ## Decisiones Pendientes
 
-- [ ] {{decisión_pendiente_1}}
-- [ ] {{decisión_pendiente_2}}
+- [ ] {{ pending_decision_1 }}
+- [ ] {{ pending_decision_2 }}
 ```
 
 ---
@@ -806,8 +848,8 @@ def tmp_output_dir(tmp_path: Path) -> Generator[Path, None, None]:
 
 ```bash
 # 1. Crear directorio del proyecto
-mkdir {{NOMBRE_PROYECTO}}
-cd {{NOMBRE_PROYECTO}}
+mkdir {{ project_name }}
+cd {{ project_name }}
 
 # 2. Inicializar git
 git init
@@ -899,7 +941,7 @@ git commit -m "chore: initial project setup with Vibe Coding 2026"
 
 ```dockerfile
 # =============================================================================
-# {{NOMBRE_PROYECTO}} - Dockerfile Multi-stage
+# {{ project_name }} - Dockerfile Multi-stage
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -908,8 +950,8 @@ git commit -m "chore: initial project setup with Vibe Coding 2026"
 FROM python:3.11-slim AS base
 
 # Metadata
-LABEL maintainer="{{AUTOR}} <{{EMAIL}}>"
-LABEL description="{{DESCRIPCIÓN}}"
+LABEL maintainer="{{ author_name }} <{{ author_email }}>"
+LABEL description="{{ project_description }}"
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -1074,7 +1116,7 @@ temp/
 
 ```yaml
 # =============================================================================
-# {{NOMBRE_PROYECTO}} - Docker Compose
+# {{ project_name }} - Docker Compose
 # =============================================================================
 
 services:
@@ -1085,22 +1127,22 @@ services:
     build:
       context: .
       target: development
-    container_name: {{nombre}}-app
+    container_name: {{ project_slug }}-app
     volumes:
       - .:/app
       - app-venv:/app/.venv
     environment:
       - PYTHONUNBUFFERED=1
       # Add service-specific environment variables
-      # - SERVICE_HOST={{service}}
-      # - SERVICE_PORT={{port}}
+      # - SERVICE_HOST={{ service_name }}
+      # - SERVICE_PORT={{ service_port }}
     # depends_on:
-    #   - {{service}}
+    #   - {{ service_name }}
     networks:
-      - {{nombre}}-network
+      - {{ project_slug }}-network
     ports:
-      - "{{PORT}}:{{PORT}}"
-    command: ["uv", "run", "{{COMANDO_PRINCIPAL}}"]
+      - "{{ app_port }}:{{ app_port }}"
+    command: ["uv", "run", "{{ main_command }}"]
 
   # ===========================================================================
   # Additional Services (uncomment as needed)
@@ -1109,26 +1151,26 @@ services:
   # Example: PostgreSQL Database
   # postgres:
   #   image: postgres:16
-  #   container_name: {{nombre}}-postgres
+  #   container_name: {{ project_slug }}-postgres
   #   environment:
-  #     - POSTGRES_USER={{user}}
-  #     - POSTGRES_PASSWORD={{password}}
-  #     - POSTGRES_DB={{db}}
+  #     - POSTGRES_USER={{ db_user }}
+  #     - POSTGRES_PASSWORD={{ db_password }}
+  #     - POSTGRES_DB={{ db_name }}
   #   volumes:
   #     - postgres-data:/var/lib/postgresql/data
   #   ports:
   #     - "5432:5432"
   #   networks:
-  #     - {{nombre}}-network
+  #     - {{ project_slug }}-network
 
   # Example: Redis Cache
   # redis:
   #   image: redis:7-alpine
-  #   container_name: {{nombre}}-redis
+  #   container_name: {{ project_slug }}-redis
   #   ports:
   #     - "6379:6379"
   #   networks:
-  #     - {{nombre}}-network
+  #     - {{ project_slug }}-network
 
   # ===========================================================================
   # Tests Runner (optional, for CI)
@@ -1137,13 +1179,13 @@ services:
     build:
       context: .
       target: development
-    container_name: {{nombre}}-tests
+    container_name: {{ project_slug }}-tests
     volumes:
       - .:/app
     environment:
       - PYTHONUNBUFFERED=1
     networks:
-      - {{nombre}}-network
+      - {{ project_slug }}-network
     command: ["uv", "run", "pytest", "-v", "--cov=src", "--cov-report=term-missing"]
     profiles:
       - testing
@@ -1152,7 +1194,7 @@ services:
 # Networks
 # =============================================================================
 networks:
-  {{nombre}}-network:
+  {{ project_slug }}-network:
     driver: bridge
 
 # =============================================================================
@@ -1171,7 +1213,7 @@ volumes:
 
 ```json
 {
-  "name": "{{NOMBRE_PROYECTO}} Development",
+  "name": "{{ project_name }} Development",
   "dockerComposeFile": ["../docker-compose.yml", "docker-compose.devcontainer.yml"],
   "service": "devcontainer",
   "workspaceFolder": "/app",
@@ -1230,7 +1272,7 @@ volumes:
   "postCreateCommand": "uv sync && uv run pre-commit install || true",
 
   // Post-start command
-  "postStartCommand": "echo '🚀 {{NOMBRE_PROYECTO}} DevContainer ready!'",
+  "postStartCommand": "echo '🚀 {{ project_name }} DevContainer ready!'",
 
   // Environment variables
   "containerEnv": {
@@ -1265,7 +1307,7 @@ services:
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
-    container_name: {{nombre}}-devcontainer
+    container_name: {{ project_slug }}-devcontainer
     volumes:
       - ..:/app:cached
       - devcontainer-venv:/app/.venv
@@ -1275,12 +1317,12 @@ services:
       - PYTHONUNBUFFERED=1
       - PYTHONDONTWRITEBYTECODE=1
       # Add service connections
-      # - SERVICE_HOST={{service}}
-      # - SERVICE_PORT={{port}}
+      # - SERVICE_HOST={{ service_name }}
+      # - SERVICE_PORT={{ service_port }}
     # depends_on:
-    #   - {{service}}
+    #   - {{ service_name }}
     networks:
-      - {{nombre}}-network
+      - {{ project_slug }}-network
     # Keep container running
     command: sleep infinity
 
@@ -1295,7 +1337,7 @@ volumes:
 
 ```dockerfile
 # =============================================================================
-# {{NOMBRE_PROYECTO}} - DevContainer Dockerfile
+# {{ project_name }} - DevContainer Dockerfile
 # =============================================================================
 # Optimized image for VS Code DevContainers development
 # =============================================================================
@@ -1303,8 +1345,8 @@ volumes:
 FROM python:3.11-slim
 
 # Metadata
-LABEL maintainer="{{AUTOR}} <{{EMAIL}}>"
-LABEL description="{{NOMBRE_PROYECTO}} DevContainer for VS Code"
+LABEL maintainer="{{ author_name }} <{{ author_email }}>"
+LABEL description="{{ project_name }} DevContainer for VS Code"
 
 # Avoid prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -1381,7 +1423,7 @@ CMD ["sleep", "infinity"]
 ## 5.7 Estructura de Directorios Actualizada (con Docker)
 
 ```
-{{NOMBRE_PROYECTO}}/
+{{ project_name }}/
 ├── CLAUDE.md
 ├── pyproject.toml
 ├── Dockerfile                 # Multi-stage build
@@ -1425,7 +1467,7 @@ docker compose down            # Detener servicios
 docker compose --profile testing run tests
 
 # Build production image
-docker build --target production -t {{nombre}}:latest .
+docker build --target production -t {{ project_slug }}:latest .
 
 # VS Code DevContainers
 # Abrir VS Code → Command Palette → "Dev Containers: Reopen in Container"

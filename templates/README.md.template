@@ -1,6 +1,6 @@
-# {{ PROJECT_NAME }}
+# {{ project_name }}
 
-{{ PROJECT_DESCRIPTION }}
+{{ project_description }}
 
 ---
 
@@ -8,8 +8,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/{{ GITHUB_USER }}/{{ PROJECT_NAME }}.git
-cd {{ PROJECT_NAME }}
+git clone https://github.com/{{ github_user }}/{{ project_name }}.git
+cd {{ project_name }}
 
 # Install dependencies (requires uv)
 uv sync
@@ -18,7 +18,7 @@ uv sync
 cp .env.example .env
 
 # Run the application
-uv run {{ project_name_lower }} --help
+uv run {{ project_slug }} --help
 ```
 
 ---
@@ -53,7 +53,7 @@ uv sync --group dev
 docker compose up -d
 
 # View logs
-docker compose logs -f {{ project_name_lower }}
+docker compose logs -f {{ project_slug }}
 ```
 
 ---
@@ -64,10 +64,10 @@ docker compose logs -f {{ project_name_lower }}
 
 ```bash
 # Show available commands
-uv run {{ project_name_lower }} --help
+uv run {{ project_slug }} --help
 
 # Run specific command
-uv run {{ project_name_lower }} [command] [options]
+uv run {{ project_slug }} [command] [options]
 ```
 
 ### Dashboard (if available)
@@ -121,7 +121,7 @@ uv run pre-commit run --all-files
 ## Project Structure
 
 ```
-{{ PROJECT_NAME }}/
+{{ project_name }}/
 ├── src/
 │   ├── domain/           # Business logic, entities, value objects
 │   ├── application/      # Use cases, ports (interfaces)

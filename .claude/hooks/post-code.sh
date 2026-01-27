@@ -2,9 +2,12 @@
 # =============================================================================
 # Post-Code Hook - META-PROYECTO
 # =============================================================================
-# Ejecutado automáticamente después de Write/Edit en archivos Python
-# Recibe JSON via stdin con información del archivo editado
+# Ejecutado automáticamente después de Write/Edit
+# 1. Formatea código con ruff
+# 2. Marca archivo como "pendiente de verificación por agentes"
 # =============================================================================
+
+set -euo pipefail
 
 # Leer JSON de stdin
 INPUT=$(cat)
@@ -42,15 +45,32 @@ while [ "$PROJECT_DIR" != "/" ]; do
     PROJECT_DIR=$(dirname "$PROJECT_DIR")
 done
 
-# Si no encontramos pyproject.toml, salir
-if [ ! -f "$PROJECT_DIR/pyproject.toml" ]; then
-    exit 0
+# Si encontramos pyproject.toml, formatear
+if [ -f "$PROJECT_DIR/pyproject.toml" ]; then
+    cd "$PROJECT_DIR"
+    uv run ruff format "$FILE_PATH" 2>/dev/null || true
+    uv run ruff check "$FILE_PATH" --fix 2>/dev/null || true
 fi
 
-cd "$PROJECT_DIR"
+# =============================================================================
+# SISTEMA DE VERIFICACIÓN PENDIENTE
+# =============================================================================
+# Marcar que este archivo necesita verificación por agentes antes de commit
 
-# Formatear y verificar el archivo
-uv run ruff format "$FILE_PATH" 2>/dev/null || true
-uv run ruff check "$FILE_PATH" --fix 2>/dev/null || true
+VERIFICATION_DIR="${CLAUDE_PROJECT_DIR:-.}/.build/checkpoints/pending"
+mkdir -p "$VERIFICATION_DIR"
+
+# Crear marker con hash del archivo para tracking
+FILE_HASH=$(echo "$FILE_PATH" | md5 | cut -c1-8)
+MARKER_FILE="$VERIFICATION_DIR/$FILE_HASH"
+
+# Guardar info del archivo pendiente
+cat > "$MARKER_FILE" << EOF
+{
+  "file": "$FILE_PATH",
+  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "verified": false
+}
+EOF
 
 exit 0

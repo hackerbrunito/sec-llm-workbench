@@ -48,8 +48,8 @@ El proyecto generado es completamente independiente y funciona con `git clone + 
 
 ```bash
 # 1. Clonar el repositorio (puedes usar cualquier nombre de directorio)
-git clone <repo-url> ~/mi-workbench
-cd ~/mi-workbench
+git clone <repo-url> ~/<your-directory>
+cd ~/<your-directory>
 
 # 2. Configurar variables de entorno
 cp .env.example .env
@@ -63,7 +63,7 @@ cp .env.example .env
 ### Continuar un proyecto existente
 
 ```bash
-cd ~/mi-workbench  # O el nombre que hayas elegido
+cd ~/<your-directory>  # O el nombre que hayas elegido
 claude
 ```
 
@@ -76,17 +76,17 @@ Continúa con [PROYECTO]
 
 1. Copiar las plantillas:
 ```bash
-cp docs/project-spec.md.example docs/mi-proyecto-spec.md
-cp projects/project-config.md.example projects/mi-proyecto.md
+cp docs/project-spec.md.example docs/<your-project>-spec.md
+cp projects/project-config.md.example projects/<your-project>.md
 ```
 
 2. Editar la especificación y configuración con los detalles de tu proyecto.
 
 3. Lanzar Claude:
 ```bash
-cd ~/mi-workbench
+cd ~/<your-directory>
 claude
-> Continúa con mi-proyecto
+> Continúa con <your-project>
 ```
 
 ## Estructura
@@ -198,7 +198,7 @@ Los errores se documentan automáticamente en `CLAUDE.md` tabla "ERRORES PASADOS
 
 ## Autor
 
-[AUTHOR_NAME] ([GITHUB_PROFILE])
+`<your-name>` (`<your-github-profile>`)
 
 ## Licencia
 
@@ -254,8 +254,8 @@ The generated project is completely independent and works with `git clone + uv s
 
 ```bash
 # 1. Clone the repository (you can use any directory name)
-git clone <repo-url> ~/my-workbench
-cd ~/my-workbench
+git clone <repo-url> ~/<your-directory>
+cd ~/<your-directory>
 
 # 2. Configure environment variables
 cp .env.example .env
@@ -269,7 +269,7 @@ cp .env.example .env
 ### Continue an existing project
 
 ```bash
-cd ~/my-workbench  # Or the name you chose
+cd ~/<your-directory>  # Or the name you chose
 claude
 ```
 
@@ -282,17 +282,17 @@ Continue with [PROJECT]
 
 1. Copy the templates:
 ```bash
-cp docs/project-spec.md.example docs/my-project-spec.md
-cp projects/project-config.md.example projects/my-project.md
+cp docs/project-spec.md.example docs/<your-project>-spec.md
+cp projects/project-config.md.example projects/<your-project>.md
 ```
 
 2. Edit the specification and configuration with your project details.
 
 3. Launch Claude:
 ```bash
-cd ~/my-workbench
+cd ~/<your-directory>
 claude
-> Continue with my-project
+> Continue with <your-project>
 ```
 
 ## Structure
@@ -404,7 +404,7 @@ Errors are automatically documented in `CLAUDE.md` table "PAST ERRORS → RULES"
 
 ## Author
 
-[AUTHOR_NAME] ([GITHUB_PROFILE])
+`<your-name>` (`<your-github-profile>`)
 
 ## License
 

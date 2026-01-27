@@ -1,0 +1,25 @@
+# Core Rules (Auto-loaded)
+
+## Tech Stack
+- Python 3.11+ (`list[str]`, `X | None`)
+- uv (NEVER pip)
+- Pydantic v2
+- httpx async
+- structlog
+- pathlib
+
+## Before Write/Edit
+Query Context7 MCP for library syntax.
+
+## After Write/Edit
+Execute /verify before commit.
+
+## Placeholder Conventions
+- `.template` files: `{{ lowercase_snake_case }}` (Cookiecutter standard)
+- Documentation: `<angle-brackets>` for example values
+- Triggers: `[UPPER_CASE]` for user-substituted values
+- Bash: `${VARIABLE}` for environment variables
+- Full registry: see `TEMPLATE-MEGAPROMPT-VIBE-CODING.md` § Placeholder Conventions
+
+## Workflow Reference
+Read `.claude/workflow/` files on demand.

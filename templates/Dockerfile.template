@@ -1,5 +1,5 @@
 # =============================================================================
-# {{ PROJECT_NAME }} - Dockerfile
+# {{ project_name }} - Dockerfile
 # =============================================================================
 # Multi-stage build with uv (Best Practices 2026)
 # =============================================================================
@@ -68,7 +68,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "print('healthy')" || exit 1
 
 # Default command
-CMD ["{{ project_name_lower }}", "--help"]
+CMD ["{{ project_slug }}", "--help"]
 
 # -----------------------------------------------------------------------------
 # Stage 4: Development image

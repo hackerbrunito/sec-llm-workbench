@@ -1,37 +1,52 @@
 #!/usr/bin/env bash
-# Pre-write hook: Verifica que Claude haya leído documentación obligatoria
-# Parte del Sistema Anti-Autopilot
+# Pre-write hook: Middleware pattern con additionalContext
+# Requiere Claude Code 2.1.9+
+# Sistema 2026 - Reemplaza Anti-Autopilot
+# Output format: hookSpecificOutput (verified via Context7 2026-01-27)
 
 set -euo pipefail
 
 TODAY=$(date +%Y%m%d)
 
-REQUIRED_CHECKPOINTS=(
-    "/tmp/claude-orchestrator-read-${TODAY}"
-    "/tmp/claude-spec-read-${TODAY}"
-    "/tmp/claude-errors-read-${TODAY}"
-)
+# Verificar checkpoints diarios (opcionales, solo recordatorio)
+MISSING_DOCS=()
 
-MISSING=()
-
-for checkpoint in "${REQUIRED_CHECKPOINTS[@]}"; do
-    if [[ ! -f "$checkpoint" ]]; then
-        MISSING+=("$checkpoint")
-    fi
-done
-
-if [[ ${#MISSING[@]} -gt 0 ]]; then
-    echo "❌ BLOQUEADO: Sistema Anti-Autopilot activado"
-    echo ""
-    echo "Faltan checkpoints de lectura obligatoria:"
-    for missing in "${MISSING[@]}"; do
-        echo "  - $missing"
-    done
-    echo ""
-    echo "Ejecuta primero:"
-    echo "  /project:start-siopv-phase [número]"
-    echo ""
-    exit 1
+if [[ ! -f "${CLAUDE_PROJECT_DIR:-.}/.build/checkpoints/daily/orchestrator-read-${TODAY}" ]]; then
+    MISSING_DOCS+=("orchestrator.md")
 fi
 
+if [[ ! -f "${CLAUDE_PROJECT_DIR:-.}/.build/checkpoints/daily/spec-read-${TODAY}" ]]; then
+    MISSING_DOCS+=("project specification")
+fi
+
+if [[ ! -f "${CLAUDE_PROJECT_DIR:-.}/.build/checkpoints/daily/errors-read-${TODAY}" ]]; then
+    MISSING_DOCS+=("errors-to-rules.md")
+fi
+
+# Si faltan documentos, inyectar contexto como recordatorio (no bloquear)
+if [[ ${#MISSING_DOCS[@]} -gt 0 ]]; then
+    DOCS_LIST=$(IFS=', '; echo "${MISSING_DOCS[*]}")
+
+    cat <<EOF
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "ask",
+    "permissionDecisionReason": "Faltan checkpoints de lectura de documentacion. Ejecuta /init-session para crearlos.",
+    "additionalContext": "RECORDATORIO: Antes de Write/Edit, verifica que hayas consultado: ${DOCS_LIST}. Esto previene errores de piloto automatico. Para crear checkpoints ejecuta: /init-session"
+  }
+}
+EOF
+    exit 0
+fi
+
+# Si todos los checkpoints existen, permitir sin preguntar
+cat <<EOF
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "allow"
+  }
+}
+EOF
 exit 0

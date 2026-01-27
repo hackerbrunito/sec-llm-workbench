@@ -26,7 +26,8 @@ Thumbs.db
 *.temp
 *.log
 
-# Audits (local only, not synced)
+# Build artifacts and checkpoints (local only)
+.build/
 .audits/
 
 # Private files (personal projects, specs - not synced)
@@ -39,3 +40,4 @@ __pycache__/
 
 # Node (para MCP servers)
 node_modules/
+.envrc

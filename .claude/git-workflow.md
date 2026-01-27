@@ -136,17 +136,17 @@ main
 ### Comandos
 ```bash
 # Crear feature branch
-git checkout -b feature/mi-feature
+git checkout -b feature/<your-feature>
 
 # Trabajar y commitear
 git add .
 git commit -m "feat(scope): implementar X"
 
 # Push (pedir confirmación)
-git push -u origin feature/mi-feature
+git push -u origin feature/<your-feature>
 
 # Crear PR
-gh pr create --title "feat: Mi Feature" --body "Descripción..."
+gh pr create --title "feat: <description>" --body "..."
 ```
 
 ---
@@ -158,7 +158,7 @@ El META-PROYECTO tiene su propio .git:
 ```bash
 cd ~/vibe-coding  # Tu directorio del META-PROYECTO
 git init
-git remote add origin git@github.com:tu-usuario/vibe-coding.git
+git remote add origin git@github.com:<your-username>/vibe-coding.git
 
 # Commits del META-PROYECTO
 git add .
@@ -187,7 +187,7 @@ Cada proyecto tiene su propio .git independiente:
 ```bash
 cd ~/<proyecto>
 git init
-git remote add origin git@github.com:<usuario>/<proyecto>.git
+git remote add origin git@github.com:<your-username>/<your-project>.git
 
 # Verificar que está limpio (sin rastro de META-PROYECTO)
 ls -la  # NO debe tener .claude/, memory-bank/
