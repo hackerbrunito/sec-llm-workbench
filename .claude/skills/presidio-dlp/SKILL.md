@@ -271,7 +271,9 @@ def test_anonymization():
 
 ```python
 # src/infrastructure/config/settings.py
-class DLPSettings(BaseModel):
+from pydantic_settings import BaseSettings
+
+class DLPSettings(BaseSettings):
     """DLP configuration."""
 
     model_config = ConfigDict(env_prefix="DLP_")

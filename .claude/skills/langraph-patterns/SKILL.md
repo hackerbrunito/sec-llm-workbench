@@ -16,7 +16,7 @@ Patrones de implementación para LangGraph 0.2+ (2026).
 from dataclasses import dataclass, field
 from typing import Literal
 
-from langgraph.graph import END, StateGraph
+from langgraph.graph import END, START, StateGraph
 
 
 @dataclass
@@ -40,8 +40,8 @@ def create_pipeline() -> StateGraph:
     workflow.add_node("validate", validate_node)
     workflow.add_node("output", output_node)
 
-    # Set entry point
-    workflow.set_entry_point("process")
+    # Entry point
+    workflow.add_edge(START, "process")
 
     # Add edges
     workflow.add_edge("process", "validate")
@@ -97,7 +97,7 @@ def should_continue(state: PipelineState) -> Literal["continue", "retry", "end"]
 ## Parallel Execution
 
 ```python
-from langgraph.graph import StateGraph
+from langgraph.graph import END, START, StateGraph
 
 def create_parallel_pipeline() -> StateGraph:
     """Pipeline with parallel branches."""
@@ -112,12 +112,13 @@ def create_parallel_pipeline() -> StateGraph:
     # Merge node
     workflow.add_node("merge", merge_results_node)
 
-    # Fan-out from entry
-    workflow.set_entry_point("fetch_nvd")
+    # Fan-out from START to all parallel nodes
+    # LangGraph executes nodes concurrently when they share the same source
+    workflow.add_edge(START, "fetch_nvd")
+    workflow.add_edge(START, "fetch_github")
+    workflow.add_edge(START, "fetch_epss")
 
     # All parallel nodes lead to merge
-    # Note: LangGraph handles parallel execution automatically
-    # when nodes don't depend on each other
     workflow.add_edge("fetch_nvd", "merge")
     workflow.add_edge("fetch_github", "merge")
     workflow.add_edge("fetch_epss", "merge")
@@ -132,11 +133,11 @@ def create_parallel_pipeline() -> StateGraph:
 ## Checkpointing (Persistence)
 
 ```python
-from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.checkpoint.postgres import PostgresSaver
 
-# Development: Memory checkpointer
-memory_saver = MemorySaver()
+# Development: In-memory checkpointer
+memory_saver = InMemorySaver()
 
 # Production: Postgres checkpointer (Supabase)
 postgres_saver = PostgresSaver.from_conn_string(
@@ -203,7 +204,7 @@ def needs_human_review(state: HumanLoopState) -> str:
 ## Error Handling
 
 ```python
-from langgraph.graph import StateGraph
+from langgraph.graph import END, START, StateGraph
 
 
 async def safe_node(state: PipelineState) -> PipelineState:
@@ -231,7 +232,7 @@ def create_resilient_pipeline() -> StateGraph:
     workflow.add_node("fallback", fallback_node)
     workflow.add_node("final", final_node)
 
-    workflow.set_entry_point("risky_step")
+    workflow.add_edge(START, "risky_step")
 
     workflow.add_conditional_edges(
         "risky_step",

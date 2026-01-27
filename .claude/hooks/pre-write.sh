@@ -25,7 +25,7 @@ fi
 
 # Si faltan documentos, inyectar contexto como recordatorio (no bloquear)
 if [[ ${#MISSING_DOCS[@]} -gt 0 ]]; then
-    DOCS_LIST=$(IFS=', '; echo "${MISSING_DOCS[*]}")
+    DOCS_LIST=$(printf '%s' "${MISSING_DOCS[0]}"; for doc in "${MISSING_DOCS[@]:1}"; do printf ', %s' "$doc"; done)
 
     cat <<EOF
 {

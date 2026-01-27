@@ -1,6 +1,6 @@
 ---
 name: verify
-description: "Ejecuta los 7 agentes de verificacion y limpia markers pendientes"
+description: "Ejecuta los 5 agentes mandatorios de verificacion y limpia markers pendientes"
 disable-model-invocation: true
 ---
 
