@@ -48,33 +48,38 @@ Orchestration (LangGraph) → Authorization (OpenFGA) → Privacy (DLP) → Huma
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Project structure (hexagonal) | ✅ Completado | Created src/{domain,application,adapters,infrastructure,interfaces} |
-| pyproject.toml with dependencies | ✅ Completado | All SIOPV dependencies added |
-| Base files (exceptions, settings, logging) | ✅ Completado | Pydantic v2 + structlog |
-| CLI skeleton (Typer) | ✅ Completado | Basic commands structure |
-| Git + uv initialization | ✅ Completado | Repository initialized |
+| Project structure (hexagonal) | ✅ Completado | src/siopv/{domain,application,adapters,infrastructure,interfaces} |
+| pyproject.toml with dependencies | ✅ Completado | 214 packages resolved, uv.lock generated |
+| Base files (exceptions, settings, logging) | ✅ Completado | Pydantic v2 + structlog (Context7 verified) |
+| CLI skeleton (Typer) | ✅ Completado | `siopv --help` working |
+| Git + uv initialization | ✅ Completado | main branch, .gitignore, .env.example |
+| Unit tests | ✅ Completado | 87 tests, 76% coverage |
+| 5-agent verification | ✅ Completado | best-practices, security, hallucination, code-review, test-gen |
 
-### Phase 1: Ingesta y Preprocesamiento ⏳
-
-| Task | Status | Notes |
-|------|--------|-------|
-| VulnerabilityRecord entity (Pydantic v2) | ⏳ Pendiente | Domain model for CVE |
-| Trivy JSON parser | ⏳ Pendiente | Parse Results[].Vulnerabilities[] |
-| Map-Reduce deduplication | ⏳ Pendiente | Deduplicate by (cve_id, package, version) |
-| Batch processing by package | ⏳ Pendiente | Optimize LLM calls |
-| Unit tests | ⏳ Pendiente | Test parser + validation |
-
-### Phase 2: Enriquecimiento (Dynamic RAG) ⏳
+### Phase 1: Ingesta y Preprocesamiento ✅
 
 | Task | Status | Notes |
 |------|--------|-------|
-| NVD API client (httpx) | ⏳ Pendiente | Rate limiter + circuit breaker |
-| GitHub Security Advisories client | ⏳ Pendiente | GraphQL API integration |
-| EPSS API client | ⏳ Pendiente | Exploit prediction scores |
-| Tavily Search API client | ⏳ Pendiente | Fallback OSINT search |
-| ChromaDB adapter | ⏳ Pendiente | Hybrid persistence (SQLite + cache) |
-| CRAG pattern implementation | ⏳ Pendiente | Relevance evaluator + fallback |
-| Unit tests | ⏳ Pendiente | Mock APIs + ChromaDB |
+| VulnerabilityRecord entity (Pydantic v2) | ✅ Completado | CVEId, CVSSScore, PackageVersion, LayerInfo value objects + VulnerabilityRecord entity |
+| Trivy JSON parser | ✅ Completado | TrivyParser class, schema v2, Results[].Vulnerabilities[] |
+| Map-Reduce deduplication | ✅ Completado | deduplicate_vulnerabilities() by (cve_id, package, version) |
+| Batch processing by package | ✅ Completado | group_by_package(), sort_by_severity(), IngestTrivyReportUseCase |
+| Unit tests | ✅ Completado | 80 new tests, 99.4% coverage en Fase 1 |
+| 5-agent verification | ✅ Completado | best-practices ✓, security ✓, hallucination ✓, code-review 8/10, test-gen ✓ |
+
+### Phase 2: Enriquecimiento (Dynamic RAG) ✅
+
+| Task | Status | Notes |
+|------|--------|-------|
+| NVD API client (httpx) | ✅ Completado | Rate limiter + circuit breaker + tenacity retry |
+| GitHub Security Advisories client | ✅ Completado | GraphQL API, ecosystem mapping, CVE/package lookup |
+| EPSS API client | ✅ Completado | Exploit prediction scores, batch queries |
+| Tavily Search API client | ✅ Completado | OSINT fallback when relevance < 0.6 |
+| ChromaDB adapter | ✅ Completado | PersistentClient + LRU cache (1000 entries) |
+| CRAG pattern implementation | ✅ Completado | EnrichContextUseCase, relevance threshold 0.6 |
+| Resilience infrastructure | ✅ Completado | CircuitBreaker (CLOSED/OPEN/HALF_OPEN) + TokenBucket RateLimiter |
+| Unit tests | ✅ Completado | 63 new tests, 230 total, 62% coverage |
+| 5-agent verification | ✅ Completado | best-practices ✓, security ✓, hallucination ✓, code-review 8.5/10, test-gen ✓ |
 
 ### Phase 3: Clasificación ML ⏳
 
@@ -178,7 +183,7 @@ uv run mypy src
 | 5 | 23 feb - 1 mar | Phases 5-6 | OpenFGA + DLP |
 | 6 | 2-8 mar | Phases 7-8 | Dashboard + Output |
 
-**Current Status:** Phase 0 (Setup) completado. Starting Phase 1 (Ingestion).
+**Current Status:** Phase 2 (Dynamic RAG) completado. Ready for Phase 3 (ML Classification).
 
 ---
 
