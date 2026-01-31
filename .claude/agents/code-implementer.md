@@ -256,12 +256,12 @@ class TestClassName:
 ## EXAMPLE: CORRECT OUTPUT
 
 ```markdown
-# Implementation Report: Domain Layer for SIOPV Phase 3
+# Implementation Report: Domain Layer for <project-name> <phase-name>
 
 ## 1. Checklist Confirmation
 
-- [x] Step 1: Read project specification at projects/siopv.md
-- [x] Step 2: Analyzed patterns in src/siopv/domain/
+- [x] Step 1: Read project specification at projects/<project-name>.md
+- [x] Step 2: Analyzed patterns in src/<project-name>/domain/
 - [x] Step 3: Queried Context7 for pydantic, xgboost, numpy
 - [x] Step 4: Planned 3 new files, 2 modifications
 
