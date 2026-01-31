@@ -1,7 +1,7 @@
 ---
 name: hallucination-detector
 description: Invoke when code uses external libraries to verify syntax against official documentation using Context7 MCP
-tools: Read, Grep, Glob, WebFetch, WebSearch
+tools: Read, Grep, Glob, WebFetch, WebSearch, mcp__context7__resolve-library-id, mcp__context7__query-docs
 model: sonnet
 ---
 

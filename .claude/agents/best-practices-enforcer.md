@@ -1,7 +1,7 @@
 ---
 name: best-practices-enforcer
 description: Invoke when code is written or edited to verify and fix Python 2026 best practices violations (type hints, Pydantic v2, httpx, structlog, pathlib)
-tools: Read, Edit, Grep, Glob, Bash
+tools: Read, Edit, Grep, Glob, Bash, mcp__context7__resolve-library-id, mcp__context7__query-docs
 model: haiku
 ---
 

@@ -41,3 +41,4 @@ __pycache__/
 # Node (para MCP servers)
 node_modules/
 .envrc
+.ignorar/
