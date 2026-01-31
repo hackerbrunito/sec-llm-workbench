@@ -5,6 +5,7 @@
 # Ejecutado automáticamente después de Write/Edit
 # 1. Formatea código con ruff
 # 2. Marca archivo como "pendiente de verificación por agentes"
+# 3. Registra decisión en sistema de trazabilidad
 # =============================================================================
 
 set -euo pipefail
@@ -12,13 +13,38 @@ set -euo pipefail
 # Leer JSON de stdin
 INPUT=$(cat)
 
-# Extraer file_path del JSON
+# =============================================================================
+# SISTEMA DE TRAZABILIDAD - Log de decisiones
+# =============================================================================
+
+log_decision() {
+    local file_path="$1"
+    local tool_name="$2"
+
+    LOGS_DIR="${CLAUDE_PROJECT_DIR:-.}/.build/logs/decisions"
+    mkdir -p "$LOGS_DIR"
+
+    DATE=$(date +%Y-%m-%d)
+    LOG_FILE="$LOGS_DIR/${DATE}.jsonl"
+    SESSION_ID="${CLAUDE_SESSION_ID:-unknown}"
+
+    # Generar UUID simple
+    DECISION_ID=$(uuidgen 2>/dev/null || echo "$(date +%s)-$$")
+
+    echo "{\"id\":\"$DECISION_ID\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"session_id\":\"$SESSION_ID\",\"type\":\"code_change\",\"tool\":\"$tool_name\",\"file\":\"$file_path\",\"outcome\":\"written\"}" >> "$LOG_FILE"
+}
+
+# Extraer file_path y tool_name del JSON
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
+TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // "unknown"' 2>/dev/null)
 
 # Si no hay file_path, salir
 if [ -z "$FILE_PATH" ]; then
     exit 0
 fi
+
+# Registrar decisión de cambio de código
+log_decision "$FILE_PATH" "$TOOL_NAME"
 
 # Solo procesar archivos Python
 if [[ "$FILE_PATH" != *.py ]]; then

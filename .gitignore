@@ -27,7 +27,11 @@ Thumbs.db
 *.log
 
 # Build artifacts and checkpoints (local only)
-.build/
+# Preserve .build/logs/reports/ for git-tracked reports
+.build/checkpoints/
+.build/logs/agents/
+.build/logs/sessions/
+.build/logs/decisions/
 .audits/
 
 # Private files (personal projects, specs - not synced)

@@ -9,10 +9,31 @@ set -euo pipefail
 # Leer JSON de stdin
 INPUT=$(cat)
 
+# =============================================================================
+# SISTEMA DE TRAZABILIDAD - Log de decisiones de commit
+# =============================================================================
+
+log_commit_decision() {
+    local decision="$1"  # allowed o blocked
+    local reason="$2"
+
+    LOGS_DIR="${CLAUDE_PROJECT_DIR:-.}/.build/logs/decisions"
+    mkdir -p "$LOGS_DIR"
+
+    DATE=$(date +%Y-%m-%d)
+    LOG_FILE="$LOGS_DIR/${DATE}.jsonl"
+    SESSION_ID="${CLAUDE_SESSION_ID:-unknown}"
+
+    # Generar UUID simple
+    DECISION_ID=$(uuidgen 2>/dev/null || echo "$(date +%s)-$$")
+
+    echo "{\"id\":\"$DECISION_ID\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"session_id\":\"$SESSION_ID\",\"type\":\"commit\",\"outcome\":\"$decision\",\"reason\":\"$reason\"}" >> "$LOG_FILE"
+}
+
 # Extraer el comando del JSON
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
 
-# Si no es un comando git commit, permitir
+# Si no es un comando git commit, permitir (sin loggear)
 if [[ "$COMMAND" != *"git commit"* ]]; then
     cat <<EOF
 {
@@ -30,6 +51,7 @@ VERIFICATION_DIR="${CLAUDE_PROJECT_DIR:-.}/.build/checkpoints/pending"
 
 # Si no existe el directorio, no hay nada pendiente
 if [ ! -d "$VERIFICATION_DIR" ]; then
+    log_commit_decision "allowed" "no_pending_dir"
     cat <<EOF
 {
   "hookSpecificOutput": {
@@ -54,6 +76,9 @@ if [ "$PENDING_COUNT" -gt 0 ]; then
         fi
     done
 
+    # Loggear decisión de bloqueo
+    log_commit_decision "blocked" "pending_verification:${PENDING_COUNT}"
+
     # Bloquear commit
     cat <<EOF
 {
@@ -66,6 +91,9 @@ if [ "$PENDING_COUNT" -gt 0 ]; then
 EOF
     exit 0
 fi
+
+# Loggear decisión de permitir
+log_commit_decision "allowed" "all_verified"
 
 # Todo verificado, permitir commit
 cat <<EOF

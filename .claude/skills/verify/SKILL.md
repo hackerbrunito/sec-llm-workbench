@@ -29,6 +29,8 @@ Si no hay archivos pendientes: "No hay archivos pendientes de verificacion"
 
 TODOS deben ejecutarse. Si uno falla, PARAR y reportar.
 
+Para CADA agente, registrar en `.build/logs/agents/YYYY-MM-DD.jsonl`:
+
 ```
 Task(subagent_type="best-practices-enforcer", prompt="Verifica archivos Python pendientes: type hints, Pydantic v2, httpx, structlog, pathlib")
 Task(subagent_type="security-auditor", prompt="Audita seguridad: OWASP Top 10, secrets, injection, LLM security")
@@ -37,13 +39,46 @@ Task(subagent_type="code-reviewer", prompt="Review calidad: complejidad, DRY, na
 Task(subagent_type="test-generator", prompt="Genera tests unitarios para modulos sin cobertura")
 ```
 
-### 3. Si TODOS Pasan, Limpiar Markers
+### 3. Logging de Agentes (OBLIGATORIO)
+
+Después de ejecutar CADA agente, añadir entrada JSONL a `.build/logs/agents/YYYY-MM-DD.jsonl`:
+
+```json
+{
+  "id": "<uuid>",
+  "timestamp": "<ISO8601>",
+  "session_id": "<session_id>",
+  "agent": "<agent_name>",
+  "files": ["<archivo1>", "<archivo2>"],
+  "status": "PASSED|FAILED",
+  "findings": [],
+  "duration_ms": <milliseconds>
+}
+```
+
+Si el agente encuentra hallazgos, también registrar en `.build/logs/decisions/YYYY-MM-DD.jsonl`:
+
+```json
+{
+  "id": "<uuid>",
+  "timestamp": "<ISO8601>",
+  "session_id": "<session_id>",
+  "agent": "<agent_name>",
+  "type": "finding",
+  "severity": "HIGH|MEDIUM|LOW",
+  "finding": "<descripcion>",
+  "file": "<archivo>",
+  "outcome": "flagged|fixed"
+}
+```
+
+### 4. Si TODOS Pasan, Limpiar Markers
 
 ```bash
 rm -rf $CLAUDE_PROJECT_DIR/.build/checkpoints/pending/*
 ```
 
-### 4. Verificaciones Adicionales
+### 5. Verificaciones Adicionales
 
 ```bash
 uv run ruff format src tests --check
@@ -64,3 +99,10 @@ uv run ruff check src tests --fix
 - `post-code.sh` crea markers en `.build/checkpoints/pending/` despues de Write/Edit en .py
 - `pre-git-commit.sh` bloquea commit si hay markers pendientes
 - `/verify` ejecuta agentes y limpia markers si todo pasa
+
+## Sistema de Trazabilidad
+
+- Logs de agentes: `.build/logs/agents/YYYY-MM-DD.jsonl`
+- Logs de decisiones: `.build/logs/decisions/YYYY-MM-DD.jsonl`
+- Ver `/show-trace` para consultar logs
+- Ver `/generate-report` para generar reportes
