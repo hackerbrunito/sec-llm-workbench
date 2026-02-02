@@ -1,6 +1,6 @@
 # Decisiones Automáticas
 
-Claude toma estas decisiones SIN preguntar:
+El orquestador delega estas decisiones a code-implementer SIN preguntar:
 
 | Situación | Acción |
 |-----------|--------|
@@ -14,9 +14,30 @@ Claude toma estas decisiones SIN preguntar:
 | Código duplicado | Refactorizar |
 | Vulnerabilidad OWASP | Corregir inmediatamente |
 
-## Context7 (OBLIGATORIO)
+## Fuentes Obligatorias (code-implementer)
 
-ANTES de escribir código con bibliotecas externas:
-1. Query Context7 MCP
-2. Verificar sintaxis actual
-3. NO asumir de memoria
+**ANTES de escribir CUALQUIER código**, `code-implementer` debe consultar:
+
+### 1. `.claude/docs/python-standards.md`
+- Type hints modernos (`list[str]`, `X | None`)
+- Pydantic v2 (`ConfigDict`, `@field_validator`)
+- httpx async (no requests)
+- structlog (no print)
+- pathlib (no os.path)
+
+### 2. `.claude/rules/core-rules.md`
+- Tech stack del proyecto
+- Reglas generales
+
+### 3. Context7 MCP
+- Sintaxis moderna para CADA biblioteca
+- Patrones actualizados
+- NO asumir de memoria
+
+**Quién lo hace:** `code-implementer` (no el orquestador)
+
+**Propósito:** Generar código con:
+- Técnicas más modernas
+- Patrones actualizados
+- Sintaxis correcta
+- Lógica óptima

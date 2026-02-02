@@ -18,11 +18,38 @@
    - Listar módulos afectados
    - Esperar confirmación
 
+5. **Después de code-implementer reporta**
+   - Presentar resumen del reporte técnico
+   - Esperar confirmación para lanzar verificación
+
+6. **Después de agentes de verificación reportan**
+   - Presentar resumen de todos los reportes
+   - Si hay fallos: esperar confirmación para corregir
+   - Si todo OK: esperar confirmación para commit
+
 ## CONTINUAR automáticamente para:
 
-- ✅ Write/Edit individual siguiendo spec
-- ✅ Correcciones de agentes
-- ✅ Ejecución de agentes
-- ✅ Tests automáticos
-- ✅ Commits aprobados por agentes
-- ✅ Consultas a Context7
+- ✅ Delegación a code-implementer (sin esperar)
+- ✅ Delegación a agentes de verificación (sin esperar)
+- ✅ Consultas a Context7 (dentro de agentes)
+- ✅ Generación de reportes técnicos
+
+## Flujo de Checkpoints
+
+```
+Orquestador delega a code-implementer
+         ↓
+code-implementer reporta (~500+ líneas)
+         ↓
+    [CHECKPOINT] → Humano aprueba
+         ↓
+Orquestador delega a 5 agentes verificación
+         ↓
+Agentes reportan (~2500+ líneas total)
+         ↓
+    [CHECKPOINT] → Humano aprueba
+         ↓
+Si fallos → code-implementer corrige → [CHECKPOINT]
+         ↓
+Si OK → COMMIT
+```
