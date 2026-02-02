@@ -81,18 +81,19 @@ Orchestration (LangGraph) → Authorization (OpenFGA) → Privacy (DLP) → Huma
 | Unit tests | ✅ Completado | 63 new tests, 230 total, 62% coverage |
 | 5-agent verification | ✅ Completado | best-practices ✓, security ✓, hallucination ✓, code-review 8.5/10, test-gen ✓ |
 
-### Phase 3: Clasificación ML ⏳
+### Phase 3: Clasificación ML ✅
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Dataset construction (CISA KEV) | ⏳ Pendiente | Download and process KEV catalog |
-| Feature engineering | ⏳ Pendiente | CVSS metrics + EPSS + temporal |
-| XGBoost training + Optuna | ⏳ Pendiente | Hyperparameter optimization |
-| SMOTE balancing | ⏳ Pendiente | Handle class imbalance |
-| SHAP global explanation | ⏳ Pendiente | Feature importance |
-| LIME local explanation | ⏳ Pendiente | Per-prediction explanations |
-| Model persistence | ⏳ Pendiente | Save/load trained model |
-| Unit tests | ⏳ Pendiente | Test inference + XAI |
+| Dataset construction (CISA KEV) | ✅ Completado | CISAKEVLoader with schema validation, path traversal protection |
+| Feature engineering | ✅ Completado | FeatureEngineer: 14 features (CVSS metrics + EPSS + temporal + context) |
+| XGBoost training + Optuna | ✅ Completado | XGBoostClassifier with Optuna hyperparameter optimization |
+| SMOTE balancing | ✅ Completado | SMOTE integration for class imbalance handling |
+| SHAP global explanation | ✅ Completado | SHAPExplainer: TreeExplainer + feature importance |
+| LIME local explanation | ✅ Completado | LIMEExplainer: per-prediction explanations with configurable seeds |
+| Model persistence | ✅ Completado | ModelPersistence: SHA-256 + HMAC integrity, path traversal protection |
+| Unit tests | ✅ Completado | 635 tests total, 74% coverage, security tests included |
+| 5-agent verification | ✅ Completado | best-practices ✓, security ✓, hallucination ✓, code-review ✓, test-gen ✓ |
 
 ### Phase 4: Orquestación (LangGraph) ⏳
 
@@ -183,7 +184,7 @@ uv run mypy src
 | 5 | 23 feb - 1 mar | Phases 5-6 | OpenFGA + DLP |
 | 6 | 2-8 mar | Phases 7-8 | Dashboard + Output |
 
-**Current Status:** Phase 2 (Dynamic RAG) completado. Ready for Phase 3 (ML Classification).
+**Current Status:** Phase 3 (ML Classification) completado. Ready for Phase 4 (LangGraph Orchestration).
 
 ---
 
