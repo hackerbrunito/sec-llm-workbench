@@ -27,6 +27,7 @@
 | Agents | `.claude/workflow/04-agents.md` |
 | Before commit | `.claude/workflow/05-before-commit.md` |
 | Auto decisions | `.claude/workflow/06-decisions.md` |
+| Orchestrator invocation | `.claude/workflow/07-orchestrator-invocation.md` |
 | Python standards | `.claude/docs/python-standards.md` |
 | Error history | `.claude/docs/errors-to-rules.md` |
 | Techniques | `.claude/docs/techniques.md` |
