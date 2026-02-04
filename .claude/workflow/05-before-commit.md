@@ -18,6 +18,19 @@ Ejecuta automáticamente:
 
 Limpia markers en `.build/checkpoints/pending/`
 
+## Verification Thresholds
+
+| Check | PASS | FAIL |
+|-------|------|------|
+| code-reviewer score | >= 9.9/10 | < 9.9/10 |
+| ruff check errors | 0 errors | Any errors |
+| ruff check warnings | 0 warnings | Any warnings |
+| mypy errors | 0 errors | Any errors |
+| pytest | All pass | Any fail |
+| best-practices-enforcer | 0 violations | Any violation |
+| security-auditor | 0 CRITICAL/HIGH/MEDIUM | Any CRITICAL/HIGH/MEDIUM |
+| hallucination-detector | 0 hallucinations | Any hallucination |
+
 ## Hook pre-git-commit.sh
 
 BLOQUEA commit si hay archivos .py sin verificar.

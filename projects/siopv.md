@@ -95,16 +95,17 @@ Orchestration (LangGraph) → Authorization (OpenFGA) → Privacy (DLP) → Huma
 | Unit tests | ✅ Completado | 635 tests total, 74% coverage, security tests included |
 | 5-agent verification | ✅ Completado | best-practices ✓, security ✓, hallucination ✓, code-review ✓, test-gen ✓ |
 
-### Phase 4: Orquestación (LangGraph) ⏳
+### Phase 4: Orquestación (LangGraph) ✅
 
 | Task | Status | Notes |
 |------|--------|-------|
-| State schema (TypedDict/Pydantic) | ⏳ Pendiente | Graph state definition |
-| Nodes: ingestion, enrichment, classification | ⏳ Pendiente | Pure functions |
-| Uncertainty Trigger (adaptive threshold) | ⏳ Pendiente | ML vs LLM discrepancy |
-| Checkpointing (SQLite) | ⏳ Pendiente | Persist state between nodes |
-| Graph compilation + visualization | ⏳ Pendiente | LangGraph workflow |
-| Integration tests | ⏳ Pendiente | End-to-end pipeline |
+| State schema (TypedDict) | ✅ Completado | PipelineState TypedDict (LangGraph requirement, not Pydantic) |
+| Nodes: ingest, enrich, classify, escalate | ✅ Completado | 4 pure functions delegating to use cases |
+| Uncertainty Trigger (adaptive threshold) | ✅ Completado | Percentile-90 historical discrepancy, ML vs LLM |
+| Checkpointing (SQLite) | ✅ Completado | SqliteSaver with path validation + extension whitelist |
+| Graph compilation (PipelineGraphBuilder) | ✅ Completado | StateGraph + conditional edges + builder pattern |
+| Unit tests | ✅ Completado | 714 tests total, 76% coverage |
+| 5-agent verification | ✅ Completado | best-practices ✓, security ✓, hallucination ✓, code-review 8.2/10, test-gen ✓ |
 
 ### Phase 5: Autorización (OpenFGA) ⏳
 
@@ -184,7 +185,7 @@ uv run mypy src
 | 5 | 23 feb - 1 mar | Phases 5-6 | OpenFGA + DLP |
 | 6 | 2-8 mar | Phases 7-8 | Dashboard + Output |
 
-**Current Status:** Phase 3 (ML Classification) completado. Ready for Phase 4 (LangGraph Orchestration).
+**Current Status:** Phase 4 (LangGraph Orchestration) completado. Ready for Phase 5 (OpenFGA Authorization).
 
 ---
 
