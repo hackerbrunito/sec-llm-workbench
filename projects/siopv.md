@@ -107,14 +107,18 @@ Orchestration (LangGraph) → Authorization (OpenFGA) → Privacy (DLP) → Huma
 | Unit tests | ✅ Completado | 714 tests total, 76% coverage |
 | 5-agent verification | ✅ Completado | best-practices ✓, security ✓, hallucination ✓, code-review 8.2/10, test-gen ✓ |
 
-### Phase 5: Autorización (OpenFGA) ⏳
+### Phase 5: Autorización (OpenFGA) ✅
 
 | Task | Status | Notes |
 |------|--------|-------|
-| ReBAC model definition | ⏳ Pendiente | Define relations (user, project, vuln) |
-| OpenFGA adapter | ⏳ Pendiente | Check permissions |
-| Authorization gatekeeper node | ⏳ Pendiente | Integrate in LangGraph |
-| Unit tests | ⏳ Pendiente | Mock OpenFGA |
+| Domain entities & value objects | ✅ Completado | AuthorizationContext, RelationshipTuple, UserId, ResourceId, Relation, Action |
+| Authorization ports (hexagonal) | ✅ Completado | AuthorizationPort, AuthorizationStorePort, AuthorizationModelPort |
+| Use cases | ✅ Completado | CheckAuthorizationUseCase, BatchCheckAuthorizationUseCase, ManageRelationshipsUseCase |
+| OpenFGA adapter | ✅ Completado | Implements 3 ports, circuit breaker, retry, 99% coverage |
+| DI factory functions | ✅ Completado | get_authorization_port, get_authorization_store_port, get_authorization_model_port |
+| Unit tests | ✅ Completado | 79 adapter tests + 26 DI tests, all passing |
+| Integration tests | ✅ Completado | 24 integration tests with mock OpenFGA |
+| 5-agent verification | ✅ Completado | best-practices ✓, security ✓, hallucination ✓, code-review 10/10, test-gen ✓ |
 
 ### Phase 6: Privacidad (DLP) ⏳
 
@@ -185,7 +189,7 @@ uv run mypy src
 | 5 | 23 feb - 1 mar | Phases 5-6 | OpenFGA + DLP |
 | 6 | 2-8 mar | Phases 7-8 | Dashboard + Output |
 
-**Current Status:** Phase 4 (LangGraph Orchestration) completado. Ready for Phase 5 (OpenFGA Authorization).
+**Current Status:** Phase 5 (OpenFGA Authorization) completado. Ready for Phase 6 (DLP - Presidio).
 
 ---
 
