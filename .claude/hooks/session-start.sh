@@ -47,7 +47,7 @@ cat > "$SESSION_FILE" << EOF
 }
 EOF
 
-# Exportar session_id para otros hooks
-export CLAUDE_SESSION_ID="$SESSION_ID"
+# Persist session_id so other hooks can read it
+echo "$SESSION_ID" > "$PROJECT_DIR/.build/current-session-id"
 
 exit 0

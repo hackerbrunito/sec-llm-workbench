@@ -105,3 +105,29 @@ Para cada prediccion, generar:
 3. **Confidence Interval** - Incertidumbre de la prediccion
 
 Esto permite auditoria completa del modelo.
+
+## Report Persistence
+
+Save report after generating explanations.
+
+### Directory
+```
+.ignorar/production-reports/xai-explainer/phase-{N}/
+```
+
+### Naming Convention
+```
+{NNN}-phase-{N}-xai-explainer-{descriptive-slug}.md
+```
+
+Examples:
+- `001-phase-3-xai-explainer-shap-global-analysis.md`
+- `002-phase-3-xai-explainer-lime-cve-2024-1234.md`
+
+### How to Determine Next Number
+1. List files in `.ignorar/production-reports/xai-explainer/phase-{N}/`
+2. Find the highest existing number
+3. Increment by 1 (or start at 001 if empty)
+
+### Create Directory if Needed
+If the directory doesn't exist, create it before writing.

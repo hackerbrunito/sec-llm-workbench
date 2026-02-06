@@ -469,37 +469,43 @@
       "week": 1,
       "dates": "26 ene - 1 feb",
       "phase": 1,
+      "status": "completed",
       "deliverables": "Ingestion engine + tests"
     },
     {
       "week": 2,
-      "dates": "2-8 feb",
+      "dates": "2-5 feb",
       "phase": 2,
+      "status": "completed",
       "deliverables": "RAG (CRAG) + APIs integration"
     },
     {
+      "week": 2,
+      "dates": "5-6 feb",
+      "phases": [3, 4, 5],
+      "status": "completed",
+      "deliverables": "ML model + LangGraph + OpenFGA (ahead of schedule)"
+    },
+    {
       "week": 3,
-      "dates": "9-15 feb",
-      "phase": 3,
-      "deliverables": "ML model + SHAP/LIME"
+      "dates": "7-13 feb",
+      "phase": 6,
+      "status": "pending",
+      "deliverables": "DLP (Presidio)"
     },
     {
       "week": 4,
-      "dates": "16-22 feb",
-      "phase": 4,
-      "deliverables": "LangGraph orchestration"
+      "dates": "14-20 feb",
+      "phase": 7,
+      "status": "pending",
+      "deliverables": "Human-in-the-Loop (Streamlit)"
     },
     {
       "week": 5,
-      "dates": "23 feb - 1 mar",
-      "phases": [5, 6],
-      "deliverables": "OpenFGA + DLP"
-    },
-    {
-      "week": 6,
-      "dates": "2-8 mar",
-      "phases": [7, 8],
-      "deliverables": "Dashboard + Output"
+      "dates": "21-28 feb",
+      "phase": 8,
+      "status": "pending",
+      "deliverables": "Output (Jira + PDF) + Integration testing"
     }
   ],
   "notes": [
