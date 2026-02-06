@@ -5,18 +5,34 @@
     "ENABLE_TOOL_SEARCH": "auto"
   },
   "attribution": {
-    "commit": ""
+    "commit": "none"
   },
+  "cleanupPeriodDays": 30,
   "statusLine": {
     "type": "command",
     "command": "phase=$(cat .build/current-phase 2>/dev/null || echo 'no-phase'); pending=$(ls .build/checkpoints/pending/ 2>/dev/null | wc -l | tr -d ' '); echo \"Phase: $phase | Pending: $pending\""
   },
   "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
     "network": {
       "allowedDomains": ["pypi.org", "github.com", "api.anthropic.com"]
     }
   },
   "permissions": {
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(sudo:*)",
+      "Bash(git push --force:*)",
+      "Bash(git reset --hard:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(rm:*)",
+      "Bash(docker:*)",
+      "Bash(docker-compose:*)"
+    ],
     "allow": [
       "Bash(uv:*)",
       "Bash(ruff:*)",
@@ -27,13 +43,10 @@
       "Bash(git status)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
-      "Bash(git push)",
       "Bash(git worktree:*)",
       "Bash(chmod:*)",
       "Bash(mkdir:*)",
       "Bash(ls:*)",
-      "Bash(docker:*)",
-      "Bash(docker-compose:*)",
       "Bash(whoami)",
       "Bash(pwd)",
       "Bash(cat:*)",
@@ -44,17 +57,9 @@
       "Bash(grep:*)",
       "Bash(touch:*)",
       "Bash(date:*)",
-      "Bash(rm:*)",
       "Bash(jq:*)",
       "Bash(wc:*)",
       "Bash(md5:*)"
-    ],
-    "deny": [
-      "Bash(rm -rf /)",
-      "Bash(rm -rf ~)",
-      "Bash(sudo:*)",
-      "Bash(git push --force:*)",
-      "Bash(git reset --hard:*)"
     ]
   },
   "hooks": {
@@ -129,12 +134,43 @@
         ]
       }
     ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"event\":\"tool_failure\",\"tool\":\"'\"$TOOL_NAME\"'\",\"timestamp\":\"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'\"}' >> .build/logs/agents/$(date +%Y-%m-%d).jsonl 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"event\":\"subagent_start\",\"timestamp\":\"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'\"}' >> .build/logs/agents/$(date +%Y-%m-%d).jsonl 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
     "SubagentStop": [
       {
         "hooks": [
           {
             "type": "command",
             "command": "echo '{\"event\":\"subagent_stop\",\"timestamp\":\"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'\"}' >> .build/logs/agents/$(date +%Y-%m-%d).jsonl 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"event\":\"session_end\",\"timestamp\":\"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'\"}' >> .build/logs/sessions/$(date +%Y-%m-%d).jsonl 2>/dev/null || true; rm -f /tmp/claude/*.tmp 2>/dev/null || true"
           }
         ]
       }

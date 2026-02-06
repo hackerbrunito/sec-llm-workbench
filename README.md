@@ -96,15 +96,15 @@ claude
 ├── README.md                     # Este archivo
 ├── CLAUDE.md                     # Instrucciones principales (auto-load)
 ├── .env.example                  # Template de variables
-├── .mcp.json                     # Context7 MCP server
+├── .claude/mcp.json              # Context7 MCP server
 │
 ├── .claude/
 │   ├── settings.json             # Permisos y hooks
 │   ├── rules/
 │   │   └── core-rules.md        # Reglas core (auto-load)
-│   ├── workflow/                  # Flujo autónomo (6 archivos, on-demand)
+│   ├── workflow/                  # Flujo autónomo (7 archivos, on-demand)
 │   ├── docs/                     # Estándares y errores (on-demand)
-│   ├── agents/                   # 7 agentes con YAML frontmatter
+│   ├── agents/                   # 8 agentes con YAML frontmatter
 │   ├── skills/                   # 14 skills con SKILL.md (7 commands + 7 patterns)
 │   └── hooks/                    # Scripts de enforcement
 │
@@ -134,6 +134,7 @@ claude
 | test-generator | sonnet | Generar tests unitarios |
 | hallucination-detector | sonnet | Verificar código contra docs oficiales |
 | vulnerability-researcher | sonnet | Investigar CVEs (NVD, GitHub, EPSS) |
+| code-implementer | sonnet | Implementar código siguiendo patrones del proyecto |
 | xai-explainer | sonnet | Explicabilidad ML con SHAP/LIME |
 
 ## Flujo Autónomo
@@ -302,15 +303,15 @@ claude
 ├── README.md                     # This file
 ├── CLAUDE.md                     # Main instructions (auto-load)
 ├── .env.example                  # Environment variables template
-├── .mcp.json                     # Context7 MCP server
+├── .claude/mcp.json              # Context7 MCP server
 │
 ├── .claude/
 │   ├── settings.json             # Permissions and hooks
 │   ├── rules/
 │   │   └── core-rules.md        # Core rules (auto-load)
-│   ├── workflow/                  # Autonomous flow (6 files, on-demand)
+│   ├── workflow/                  # Autonomous flow (7 files, on-demand)
 │   ├── docs/                     # Standards and errors (on-demand)
-│   ├── agents/                   # 7 agents with YAML frontmatter
+│   ├── agents/                   # 8 agents with YAML frontmatter
 │   ├── skills/                   # 14 skills with SKILL.md (7 commands + 7 patterns)
 │   └── hooks/                    # Enforcement scripts
 │
@@ -340,6 +341,7 @@ claude
 | test-generator | sonnet | Generate unit tests |
 | hallucination-detector | sonnet | Verify code against official docs |
 | vulnerability-researcher | sonnet | Research CVEs (NVD, GitHub, EPSS) |
+| code-implementer | sonnet | Implement code following project patterns |
 | xai-explainer | sonnet | ML explainability with SHAP/LIME |
 
 ## Autonomous Flow
