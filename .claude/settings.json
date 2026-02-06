@@ -73,6 +73,22 @@
         ]
       },
       {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "today=$(date +%Y-%m-%d); if [ ! -f .build/checkpoints/daily/$today.json ]; then echo \"REMINDER: No daily checkpoint for $today. Consider running /init-session.\"; fi"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "w=''; command -v npx >/dev/null 2>&1 || w=\"${w}npx not found. \"; command -v node >/dev/null 2>&1 || w=\"${w}node not found. \"; [ -f \"$CLAUDE_PROJECT_DIR/.claude/mcp.json\" ] || w=\"${w}.claude/mcp.json missing. \"; [ -f \"$CLAUDE_PROJECT_DIR/.env\" ] && grep -q 'UPSTASH_API_KEY=.' \"$CLAUDE_PROJECT_DIR/.env\" || w=\"${w}UPSTASH_API_KEY not set in .env. \"; if [ -n \"$w\" ]; then echo \"MCP Health WARN: $w Run /mcp to verify.\"; else echo \"MCP Health: OK\"; fi"
+          }
+        ]
+      },
+      {
         "matcher": "compact",
         "hooks": [
           {
@@ -161,6 +177,16 @@
           {
             "type": "command",
             "command": "echo '{\"event\":\"subagent_stop\",\"timestamp\":\"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'\"}' >> .build/logs/agents/$(date +%Y-%m-%d).jsonl 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "prompt=\"$USER_PROMPT\"; match=$(echo \"$prompt\" | grep -ioE '(Contin[úu]a con|Continue with|Trabaja en|Work on)\\s+(.+)' | sed -E 's/(Contin[úu]a con|Continue with|Trabaja en|Work on)\\s+//i'); if [ -n \"$match\" ]; then name=$(echo \"$match\" | xargs | tr '[:upper:]' '[:lower:]' | tr ' ' '-'); found=''; for ext in json md yaml; do if [ -f \"$CLAUDE_PROJECT_DIR/projects/$name.$ext\" ]; then found=\"$CLAUDE_PROJECT_DIR/projects/$name.$ext\"; break; fi; done; if [ -n \"$found\" ]; then echo \"PROJECT DETECTED: $match -> $found\"; else echo \"PROJECT DETECTED: $match (no config found in projects/)\"; fi; fi"
           }
         ]
       }

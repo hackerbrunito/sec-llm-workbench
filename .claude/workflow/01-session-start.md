@@ -1,3 +1,4 @@
+<!-- version: 2026-02 -->
 # Session Start
 
 ## Triggers de Inicio

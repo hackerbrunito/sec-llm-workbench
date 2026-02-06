@@ -1,3 +1,4 @@
+<!-- version: 2026-02 -->
 # Human-in-the-Loop Checkpoints
 
 <!-- COMPACT-SAFE: PAUSE only for: phase transitions, destructive actions, post-verification synthesis. CONTINUE for: agent delegation, Context7 queries, file reads, report generation. -->

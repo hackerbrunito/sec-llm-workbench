@@ -2,7 +2,7 @@
 name: show-trace
 description: "Mostrar ultimas entradas de logs de trazabilidad"
 argument-hint: "[options]"
-disable-model-invocation: true
+context: fork
 ---
 
 # /show-trace

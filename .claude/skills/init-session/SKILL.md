@@ -2,7 +2,7 @@
 name: init-session
 description: "Inicia sesion de desarrollo con lectura obligatoria de documentacion"
 argument-hint: "[phase-number]"
-disable-model-invocation: true
+context: fork
 ---
 
 # /init-session

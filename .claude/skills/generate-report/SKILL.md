@@ -2,7 +2,7 @@
 name: generate-report
 description: "Generar reporte de sesion con metricas y trazabilidad"
 argument-hint: "[options]"
-disable-model-invocation: true
+context: fork
 ---
 
 # /generate-report

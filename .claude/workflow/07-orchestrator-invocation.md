@@ -1,3 +1,4 @@
+<!-- version: 2026-02 -->
 # Protocolo de Invocación del Orquestador
 
 Cómo el orquestador debe invocar a code-implementer y otros agentes.
@@ -302,3 +303,60 @@ Antes de cada invocación a code-implementer:
 | Sin referencias a código existente | Inconsistencia de estilo | Incluir paths de ejemplos |
 | Múltiples layers en una invocación | Mezcla responsabilidades | Una invocación por layer |
 | Prompt vago "arregla los errores" | Ambiguo, resultados impredecibles | Especificar qué errores |
+
+---
+
+## MCP Resilience
+
+### Health Check at Session Start
+
+A SessionStart hook validates MCP prerequisites (npx, node, config files).
+If it reports issues, run `/mcp` to check server connectivity before proceeding.
+
+### Fallback Strategy
+
+If an MCP server (e.g., Context7) is unreachable:
+
+1. **Retry once** after 10 seconds
+2. **Fallback to WebSearch** for documentation queries
+3. **Log the failure** and continue — do NOT block the entire session
+4. **Notify the user** so they can fix connectivity if needed
+
+### Common MCP Issues
+
+| Issue | Symptom | Fix |
+|-------|---------|-----|
+| Context7 timeout | `resolve-library-id` hangs | Check `UPSTASH_API_KEY` in `.env`, run `/mcp` |
+| npx not found | SessionStart health check warning | Install Node.js, ensure npx is in PATH |
+| Config mismatch | Tools not available | Verify `.claude/mcp.json` format matches Claude Code version |
+
+### Protocolo de Fallback Detallado
+
+Cuando Context7 no esta disponible, seguir este orden de preferencia para verificar sintaxis de librerias externas:
+
+```
+1. Context7 MCP (resolve-library-id -> query-docs)
+2. WebSearch + WebFetch (documentacion oficial)
+3. Codigo existente en el proyecto (patrones ya validados)
+4. NUNCA: Asumir sintaxis de memoria/training data sin verificar
+```
+
+**Paso a paso del fallback:**
+
+1. **Detectar indisponibilidad**: Si `resolve-library-id` o `query-docs` falla, no reintentar mas de 2 veces.
+2. **Fallback a WebSearch**: Usar `WebSearch` para buscar documentacion oficial de la libreria (e.g., `"pydantic v2 model_validator 2026"`).
+3. **Consultar docs oficiales**: Usar `WebFetch` para leer directamente la documentacion oficial del sitio de la libreria.
+4. **Nunca asumir sintaxis**: No confiar en sintaxis de training data sin verificacion. Las APIs cambian entre versiones.
+
+**Ejemplo de fallback:**
+
+```
+# Context7 fallo -> usar WebSearch
+WebSearch("pydantic v2 field_validator decorator syntax 2026")
+
+# Luego leer la doc oficial
+WebFetch("https://docs.pydantic.dev/latest/concepts/validators/",
+         "Show me the field_validator decorator syntax and parameters")
+```
+
+> **Regla**: Si no puedes verificar la sintaxis de una libreria externa por ningun medio, documentalo en el reporte del agente y marca el codigo como pendiente de verificacion.

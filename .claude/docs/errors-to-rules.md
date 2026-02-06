@@ -1,6 +1,9 @@
 # Errores → Reglas (Self-Correcting Log)
 
-Registro condensado de errores y reglas. Claude DEBE revisar antes de cada sesion.
+Registro condensado de errores y reglas **de este proyecto** (sec-llm-workbench).
+Claude DEBE revisar antes de cada sesion.
+
+> **Scope:** Project-specific errors. Global errors (cross-project) live in `~/.claude/rules/errors-to-rules.md`.
 
 ---
 

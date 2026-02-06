@@ -131,3 +131,76 @@ Examples:
 
 ### Create Directory if Needed
 If the directory doesn't exist, create it before writing.
+
+## Report Format
+
+```markdown
+# XAI Explanation Report - Phase [N]
+
+**Date:** YYYY-MM-DD HH:MM
+**Model:** [model name/path]
+**Predictions Explained:** N
+
+---
+
+## Summary
+
+| Prediction | Confidence | Top Factor | SHAP | LIME |
+|------------|------------|------------|------|------|
+| CVE-XXXX-YYYY: CRITICAL | 0.92 | EPSS Score | Done | Done |
+
+---
+
+## Global Explanation (SHAP)
+
+### Feature Importance (Top 10)
+
+| Rank | Feature | Mean |SHAP| | Direction |
+|------|---------|--------------|-----------|
+| 1 | EPSS Score | +0.35 | Higher = more risk |
+| 2 | CVSS Score | +0.28 | Higher = more risk |
+| 3 | Has Patch | -0.15 | No patch = more risk |
+
+### Visualizations Generated
+- `shap_summary.png` - Global feature importance
+- `shap_dependence_{feature}.png` - Feature interaction plots
+
+---
+
+## Local Explanations (LIME)
+
+### [XAI-001] CVE-XXXX-YYYY
+
+- **Prediction:** CRITICAL (0.92 confidence)
+- **Key Factors (SHAP):**
+  1. EPSS Score (+0.35): 0.85 indicates high exploitation probability
+  2. CVSS Score (+0.28): 9.8 indicates critical severity
+  3. Has Patch (-0.15): No patch available (increases risk)
+- **LIME Interpretation:**
+  - If EPSS < 0.5, risk drops to HIGH
+  - If CVSS < 7.0, risk drops to MEDIUM
+- **Confidence Interval:** [0.88, 0.96]
+- **Visualizations:**
+  - `shap_waterfall_CVE-XXXX-YYYY.png`
+  - `lime_explanation_CVE-XXXX-YYYY.html`
+
+[Continue for each prediction...]
+
+---
+
+## Evidence Triad
+
+For each prediction, the following evidence was generated:
+1. **SHAP Values** - Feature contribution per prediction
+2. **LIME Explanation** - Local interpretable rules
+3. **Confidence Interval** - Prediction uncertainty
+
+---
+
+## Result
+
+**XAI EXPLANATION GENERATED**
+- Global: shap_summary.png
+- Local explanations: N predictions explained
+- All evidence triads complete
+```

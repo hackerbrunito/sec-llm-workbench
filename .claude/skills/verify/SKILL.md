@@ -1,7 +1,6 @@
 ---
 name: verify
 description: "Ejecuta los 5 agentes mandatorios de verificacion y limpia markers pendientes"
-disable-model-invocation: true
 context: fork
 agent: general-purpose
 argument-hint: "[--fix]"

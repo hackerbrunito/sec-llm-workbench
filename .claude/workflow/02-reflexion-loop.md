@@ -1,3 +1,4 @@
+<!-- version: 2026-02 -->
 # Reflexion Loop (PRA Pattern)
 
 <!-- COMPACT-SAFE: PRA Pattern (Perception→Reasoning→Action→Reflection). Orchestrator delegates to code-implementer, then 5 verification agents. Reports saved to files, only summaries in context. -->

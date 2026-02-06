@@ -1,3 +1,4 @@
+<!-- version: 2026-02 -->
 # Invocación de Agentes
 
 ## Agente de Implementación
@@ -56,3 +57,24 @@ Todos los agentes deben generar reportes técnicos detallados (~500+ líneas, fl
 - Delegar corrección a code-implementer
 - Documentar en errors-to-rules.md si es error nuevo
 - Volver a verificar con los 5 agentes
+
+## Agent Teams (Opus 4.6)
+
+Opus 4.6 soporta coordinacion paralela de agentes con task lists compartidas.
+Esto permite ejecutar los 5 agentes de verificacion en paralelo en lugar de secuencialmente.
+
+### Uso potencial
+```
+# Paralelo (mas rapido, mas tokens)
+Task(best-practices-enforcer, ...) + Task(security-auditor, ...) + Task(hallucination-detector, ...)
+# Esperar resultados, luego:
+Task(code-reviewer, ...) + Task(test-generator, ...)
+```
+
+### Cuando usar
+- Ciclos de verificacion completos (5 agentes)
+- Auditorias multi-archivo donde cada agente revisa un scope independiente
+
+### Cuando NO usar
+- Tareas con dependencias secuenciales (code-implementer → verificacion)
+- Contexto limitado (cada agente paralelo consume tokens independientes)

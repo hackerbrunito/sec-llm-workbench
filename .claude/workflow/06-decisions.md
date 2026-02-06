@@ -1,3 +1,4 @@
+<!-- version: 2026-02 -->
 # Decisiones Automáticas
 
 El orquestador delega estas decisiones a code-implementer SIN preguntar:
