@@ -9,13 +9,13 @@
 ### code-implementer DEBE consultar:
 
 1. **`.claude/docs/python-standards.md`** → Estándares del proyecto (Pydantic v2, httpx, structlog, pathlib, type hints modernos)
-2. **`.claude/rules/core-rules.md`** → Tech stack y reglas generales
+2. **`.claude/rules/tech-stack.md`** → Tech stack y reglas generales
 3. **Context7 MCP** → Sintaxis moderna y patrones actualizados para CADA biblioteca usada
 
 ### Orden de consulta:
 ```
 1. Leer python-standards.md (QUÉ usar)
-2. Leer core-rules.md (reglas del proyecto)
+2. Leer tech-stack.md (reglas del proyecto)
 3. Query Context7 (CÓMO usarlo correctamente)
 4. Implementar código
 5. Generar reporte técnico

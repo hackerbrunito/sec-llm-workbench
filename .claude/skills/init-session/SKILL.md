@@ -23,7 +23,7 @@ Claude DEBE leer los 3 documentos COMPLETOS:
 
 ```
 .claude/workflow/ (todos los archivos)
-[especificacion del proyecto segun projects/*.md]
+[especificacion del proyecto segun projects/*.json]
 .claude/docs/errors-to-rules.md
 ```
 

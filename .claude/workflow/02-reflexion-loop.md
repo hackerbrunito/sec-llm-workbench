@@ -1,5 +1,7 @@
 # Reflexion Loop (PRA Pattern)
 
+<!-- COMPACT-SAFE: PRA Pattern (Perception→Reasoning→Action→Reflection). Orchestrator delegates to code-implementer, then 5 verification agents. Reports saved to files, only summaries in context. -->
+
 Para CADA tarea de desarrollo:
 
 ## 1. PERCEPTION (Orquestador)
@@ -55,3 +57,13 @@ Solo si verificación exitosa y aprobación humana.
 | **Contexto orquestador** | Libre para ingesta total |
 
 **Beneficio:** Trazabilidad completa. Orquestador puede responder cualquier pregunta.
+
+---
+
+## Context Efficiency Rules
+
+- Agents write FULL reports to `.ignorar/production-reports/` (500+ lines)
+- Orchestrator receives only a **summary** (max 50 lines per agent)
+- Summary format: status (PASS/FAIL), critical findings count, top 3 issues
+- Use /clear between phases to prevent context pollution
+- After 2 failed corrections, /clear and rewrite the prompt

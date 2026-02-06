@@ -1,29 +1,21 @@
 # Human-in-the-Loop Checkpoints
 
+<!-- COMPACT-SAFE: PAUSE only for: phase transitions, destructive actions, post-verification synthesis. CONTINUE for: agent delegation, Context7 queries, file reads, report generation. -->
+
 ## PAUSAR para aprobación humana en:
 
 1. **Inicio de Fase Nueva**
    - Anunciar objetivos y deliverables
    - Esperar confirmación
 
-2. **Cambio Arquitectónico Mayor**
-   - Explicar propuesta e impacto
+2. **Acciones Destructivas/Irreversibles**
+   - Eliminación de archivos
+   - Cambios arquitectónicos mayores
+   - Cambios multi-módulo (>3 módulos)
    - Esperar confirmación
 
-3. **Eliminación de Archivos**
-   - Listar archivos a eliminar
-   - Esperar confirmación
-
-4. **Cambio Multi-Módulo (>3 módulos)**
-   - Listar módulos afectados
-   - Esperar confirmación
-
-5. **Después de code-implementer reporta**
-   - Presentar resumen del reporte técnico
-   - Esperar confirmación para lanzar verificación
-
-6. **Después de agentes de verificación reportan**
-   - Presentar resumen de todos los reportes
+3. **Después de TODOS los agentes de verificación reportan**
+   - Presentar resumen consolidado de los 5 agentes
    - Si hay fallos: esperar confirmación para corregir
    - Si todo OK: esperar confirmación para commit
 
@@ -33,6 +25,7 @@
 - ✅ Delegación a agentes de verificación (sin esperar)
 - ✅ Consultas a Context7 (dentro de agentes)
 - ✅ Generación de reportes técnicos
+- ✅ Lectura de archivos y exploración de código
 
 ## Flujo de Checkpoints
 

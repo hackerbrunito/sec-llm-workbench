@@ -2,6 +2,9 @@
 name: verify
 description: "Ejecuta los 5 agentes mandatorios de verificacion y limpia markers pendientes"
 disable-model-invocation: true
+context: fork
+agent: general-purpose
+argument-hint: "[--fix]"
 ---
 
 # /verify
@@ -14,6 +17,10 @@ Ejecuta agentes de verificacion y limpia markers de archivos pendientes.
 /verify
 /verify --fix
 ```
+
+## Current State
+- Pending files: !`ls .build/checkpoints/pending/ 2>/dev/null || echo "none"`
+- Last verification: !`ls -t .build/logs/agents/ 2>/dev/null | head -1 || echo "none"`
 
 ## Comportamiento
 

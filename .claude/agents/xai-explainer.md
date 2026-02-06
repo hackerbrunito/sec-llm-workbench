@@ -3,6 +3,8 @@ name: xai-explainer
 description: Invoke to generate ML model explanations using SHAP (global) and LIME (local) for audit and transparency requirements
 tools: Read, Write, Bash
 model: sonnet
+memory: project
+permissionMode: acceptEdits
 ---
 
 # XAI Explainer

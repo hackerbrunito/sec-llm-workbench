@@ -3,6 +3,9 @@ name: hallucination-detector
 description: Verify code syntax against official documentation using Context7 MCP. Detects hallucinated APIs, parameters, and deprecated patterns. Saves reports to .ignorar/production-reports/.
 tools: Read, Grep, Glob, WebFetch, WebSearch, mcp__context7__resolve-library-id, mcp__context7__query-docs
 model: sonnet
+memory: project
+permissionMode: plan
+disallowedTools: [Write, Edit]
 ---
 
 # Hallucination Detector

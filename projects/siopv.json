@@ -1,0 +1,512 @@
+{
+  "$comment": "Project state file - Anthropic recommends JSON over Markdown for structured state tracking",
+  "project": {
+    "name": "SIOPV",
+    "path": "~/siopv/",
+    "type": "Sistema de Orquestación (CLI + API + Dashboard)",
+    "deadline": "2026-03-01",
+    "description": "Sistema Inteligente de Orquestación y Priorización de Vulnerabilidades para pipelines CI/CD. Implementa un pipeline híbrido ML + GenAI con 8 fases: Ingesta → RAG (CRAG) → ML Classification → Orchestration (LangGraph) → Authorization (OpenFGA) → Privacy (DLP) → Human-in-the-Loop → Output.",
+    "specification": "docs/SIOPV_Propuesta_Tecnica_v2.txt"
+  },
+  "stack": [
+    {
+      "name": "Python",
+      "version": "3.11+",
+      "purpose": "Runtime"
+    },
+    {
+      "name": "uv",
+      "version": "latest",
+      "purpose": "Package manager"
+    },
+    {
+      "name": "LangGraph",
+      "version": ">=0.2.0",
+      "purpose": "AI orchestration"
+    },
+    {
+      "name": "Claude",
+      "version": "Haiku 4.5 + Sonnet 4.5",
+      "purpose": "LLM reasoning"
+    },
+    {
+      "name": "XGBoost",
+      "version": ">=2.0.0",
+      "purpose": "ML classification"
+    },
+    {
+      "name": "SHAP/LIME",
+      "version": "latest",
+      "purpose": "Explainability (XAI)"
+    },
+    {
+      "name": "ChromaDB",
+      "version": ">=0.5.0",
+      "purpose": "Vector database (RAG)"
+    },
+    {
+      "name": "Presidio",
+      "version": ">=2.2.0",
+      "purpose": "DLP sanitization"
+    },
+    {
+      "name": "OpenFGA",
+      "version": "latest",
+      "purpose": "Fine-grained authorization"
+    },
+    {
+      "name": "Streamlit",
+      "version": ">=1.40.0",
+      "purpose": "Dashboard"
+    },
+    {
+      "name": "PostgreSQL",
+      "version": "16",
+      "purpose": "Database (checkpointing)"
+    }
+  ],
+  "phases": [
+    {
+      "number": 0,
+      "name": "Setup",
+      "status": "completed",
+      "components": [
+        {
+          "name": "Project structure (hexagonal)",
+          "status": "completed",
+          "notes": "src/siopv/{domain,application,adapters,infrastructure,interfaces}"
+        },
+        {
+          "name": "pyproject.toml with dependencies",
+          "status": "completed",
+          "notes": "214 packages resolved, uv.lock generated"
+        },
+        {
+          "name": "Base files (exceptions, settings, logging)",
+          "status": "completed",
+          "notes": "Pydantic v2 + structlog (Context7 verified)"
+        },
+        {
+          "name": "CLI skeleton (Typer)",
+          "status": "completed",
+          "notes": "siopv --help working"
+        },
+        {
+          "name": "Git + uv initialization",
+          "status": "completed",
+          "notes": "main branch, .gitignore, .env.example"
+        },
+        {
+          "name": "Unit tests",
+          "status": "completed",
+          "notes": "87 tests, 76% coverage"
+        },
+        {
+          "name": "5-agent verification",
+          "status": "completed",
+          "notes": "best-practices, security, hallucination, code-review, test-gen"
+        }
+      ]
+    },
+    {
+      "number": 1,
+      "name": "Ingesta y Preprocesamiento",
+      "status": "completed",
+      "components": [
+        {
+          "name": "VulnerabilityRecord entity (Pydantic v2)",
+          "status": "completed",
+          "notes": "CVEId, CVSSScore, PackageVersion, LayerInfo value objects + VulnerabilityRecord entity"
+        },
+        {
+          "name": "Trivy JSON parser",
+          "status": "completed",
+          "notes": "TrivyParser class, schema v2, Results[].Vulnerabilities[]"
+        },
+        {
+          "name": "Map-Reduce deduplication",
+          "status": "completed",
+          "notes": "deduplicate_vulnerabilities() by (cve_id, package, version)"
+        },
+        {
+          "name": "Batch processing by package",
+          "status": "completed",
+          "notes": "group_by_package(), sort_by_severity(), IngestTrivyReportUseCase"
+        },
+        {
+          "name": "Unit tests",
+          "status": "completed",
+          "notes": "80 new tests, 99.4% coverage en Fase 1"
+        },
+        {
+          "name": "5-agent verification",
+          "status": "completed",
+          "notes": "best-practices ✓, security ✓, hallucination ✓, code-review 8/10, test-gen ✓"
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "name": "Enriquecimiento (Dynamic RAG)",
+      "status": "completed",
+      "components": [
+        {
+          "name": "NVD API client (httpx)",
+          "status": "completed",
+          "notes": "Rate limiter + circuit breaker + tenacity retry"
+        },
+        {
+          "name": "GitHub Security Advisories client",
+          "status": "completed",
+          "notes": "GraphQL API, ecosystem mapping, CVE/package lookup"
+        },
+        {
+          "name": "EPSS API client",
+          "status": "completed",
+          "notes": "Exploit prediction scores, batch queries"
+        },
+        {
+          "name": "Tavily Search API client",
+          "status": "completed",
+          "notes": "OSINT fallback when relevance < 0.6"
+        },
+        {
+          "name": "ChromaDB adapter",
+          "status": "completed",
+          "notes": "PersistentClient + LRU cache (1000 entries)"
+        },
+        {
+          "name": "CRAG pattern implementation",
+          "status": "completed",
+          "notes": "EnrichContextUseCase, relevance threshold 0.6"
+        },
+        {
+          "name": "Resilience infrastructure",
+          "status": "completed",
+          "notes": "CircuitBreaker (CLOSED/OPEN/HALF_OPEN) + TokenBucket RateLimiter"
+        },
+        {
+          "name": "Unit tests",
+          "status": "completed",
+          "notes": "63 new tests, 230 total, 62% coverage"
+        },
+        {
+          "name": "5-agent verification",
+          "status": "completed",
+          "notes": "best-practices ✓, security ✓, hallucination ✓, code-review 8.5/10, test-gen ✓"
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "name": "Clasificación ML",
+      "status": "completed",
+      "components": [
+        {
+          "name": "Dataset construction (CISA KEV)",
+          "status": "completed",
+          "notes": "CISAKEVLoader with schema validation, path traversal protection"
+        },
+        {
+          "name": "Feature engineering",
+          "status": "completed",
+          "notes": "FeatureEngineer: 14 features (CVSS metrics + EPSS + temporal + context)"
+        },
+        {
+          "name": "XGBoost training + Optuna",
+          "status": "completed",
+          "notes": "XGBoostClassifier with Optuna hyperparameter optimization"
+        },
+        {
+          "name": "SMOTE balancing",
+          "status": "completed",
+          "notes": "SMOTE integration for class imbalance handling"
+        },
+        {
+          "name": "SHAP global explanation",
+          "status": "completed",
+          "notes": "SHAPExplainer: TreeExplainer + feature importance"
+        },
+        {
+          "name": "LIME local explanation",
+          "status": "completed",
+          "notes": "LIMEExplainer: per-prediction explanations with configurable seeds"
+        },
+        {
+          "name": "Model persistence",
+          "status": "completed",
+          "notes": "ModelPersistence: SHA-256 + HMAC integrity, path traversal protection"
+        },
+        {
+          "name": "Unit tests",
+          "status": "completed",
+          "notes": "635 tests total, 74% coverage, security tests included"
+        },
+        {
+          "name": "5-agent verification",
+          "status": "completed",
+          "notes": "best-practices ✓, security ✓, hallucination ✓, code-review ✓, test-gen ✓"
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "name": "Orquestación (LangGraph)",
+      "status": "completed",
+      "components": [
+        {
+          "name": "State schema (TypedDict)",
+          "status": "completed",
+          "notes": "PipelineState TypedDict (LangGraph requirement, not Pydantic)"
+        },
+        {
+          "name": "Nodes: ingest, enrich, classify, escalate",
+          "status": "completed",
+          "notes": "4 pure functions delegating to use cases"
+        },
+        {
+          "name": "Uncertainty Trigger (adaptive threshold)",
+          "status": "completed",
+          "notes": "Percentile-90 historical discrepancy, ML vs LLM"
+        },
+        {
+          "name": "Checkpointing (SQLite)",
+          "status": "completed",
+          "notes": "SqliteSaver with path validation + extension whitelist"
+        },
+        {
+          "name": "Graph compilation (PipelineGraphBuilder)",
+          "status": "completed",
+          "notes": "StateGraph + conditional edges + builder pattern"
+        },
+        {
+          "name": "Unit tests",
+          "status": "completed",
+          "notes": "714 tests total, 76% coverage"
+        },
+        {
+          "name": "5-agent verification",
+          "status": "completed",
+          "notes": "best-practices ✓, security ✓, hallucination ✓, code-review 8.2/10, test-gen ✓"
+        }
+      ]
+    },
+    {
+      "number": 5,
+      "name": "Autorización (OpenFGA)",
+      "status": "completed",
+      "components": [
+        {
+          "name": "Domain entities & value objects",
+          "status": "completed",
+          "notes": "AuthorizationContext, RelationshipTuple, UserId, ResourceId, Relation, Action"
+        },
+        {
+          "name": "Authorization ports (hexagonal)",
+          "status": "completed",
+          "notes": "AuthorizationPort, AuthorizationStorePort, AuthorizationModelPort"
+        },
+        {
+          "name": "Use cases",
+          "status": "completed",
+          "notes": "CheckAuthorizationUseCase, BatchCheckAuthorizationUseCase, ManageRelationshipsUseCase"
+        },
+        {
+          "name": "OpenFGA adapter",
+          "status": "completed",
+          "notes": "Implements 3 ports, circuit breaker, retry, 99% coverage"
+        },
+        {
+          "name": "DI factory functions",
+          "status": "completed",
+          "notes": "get_authorization_port, get_authorization_store_port, get_authorization_model_port"
+        },
+        {
+          "name": "Unit tests",
+          "status": "completed",
+          "notes": "79 adapter tests + 26 DI tests, all passing"
+        },
+        {
+          "name": "Integration tests",
+          "status": "completed",
+          "notes": "24 integration tests with mock OpenFGA"
+        },
+        {
+          "name": "5-agent verification",
+          "status": "completed",
+          "notes": "best-practices ✓, security ✓, hallucination ✓, code-review 10/10, test-gen ✓"
+        }
+      ]
+    },
+    {
+      "number": 6,
+      "name": "Privacidad (DLP)",
+      "status": "pending",
+      "components": [
+        {
+          "name": "Presidio analyzer setup",
+          "status": "pending",
+          "notes": "Detect PII/secrets"
+        },
+        {
+          "name": "Presidio anonymizer setup",
+          "status": "pending",
+          "notes": "Redact sensitive data"
+        },
+        {
+          "name": "Claude Haiku semantic validator",
+          "status": "pending",
+          "notes": "Contextual sanitization"
+        },
+        {
+          "name": "DLP guardrail node",
+          "status": "pending",
+          "notes": "Dual-layer sanitization"
+        },
+        {
+          "name": "Unit tests",
+          "status": "pending",
+          "notes": "Test detection + redaction"
+        }
+      ]
+    },
+    {
+      "number": 7,
+      "name": "Human-in-the-Loop",
+      "status": "pending",
+      "components": [
+        {
+          "name": "Streamlit dashboard",
+          "status": "pending",
+          "notes": "Display escalated cases"
+        },
+        {
+          "name": "Tríada de evidencia UI",
+          "status": "pending",
+          "notes": "Summary + LIME plot + CoT log"
+        },
+        {
+          "name": "Polling mechanism (SQLite)",
+          "status": "pending",
+          "notes": "Detect escalated cases"
+        },
+        {
+          "name": "Timeout escalation logic",
+          "status": "pending",
+          "notes": "4h → 8h → 24h auto-approval"
+        },
+        {
+          "name": "Unit tests",
+          "status": "pending",
+          "notes": "Mock dashboard interactions"
+        }
+      ]
+    },
+    {
+      "number": 8,
+      "name": "Output (Acción y Auditoría)",
+      "status": "pending",
+      "components": [
+        {
+          "name": "Jira adapter",
+          "status": "pending",
+          "notes": "Create enriched tickets"
+        },
+        {
+          "name": "PDF report generator (FPDF2)",
+          "status": "pending",
+          "notes": "Audit trail PDF"
+        },
+        {
+          "name": "Ticket enrichment (CVSS, EPSS, confidence)",
+          "status": "pending",
+          "notes": "Custom Jira fields"
+        },
+        {
+          "name": "Output action node",
+          "status": "pending",
+          "notes": "Final pipeline step"
+        },
+        {
+          "name": "Unit tests",
+          "status": "pending",
+          "notes": "Mock Jira API"
+        }
+      ]
+    }
+  ],
+  "currentPhase": 5,
+  "currentStatus": "Phase 5 (OpenFGA Authorization) completado. Ready for Phase 6 (DLP - Presidio).",
+  "metrics": {
+    "totalTests": 714,
+    "coverage": "76%",
+    "packagesResolved": 214
+  },
+  "commands": {
+    "setup": [
+      "cd ~/siopv",
+      "uv sync",
+      "cp .env.example .env"
+    ],
+    "run": [
+      "uv run siopv --help",
+      "uv run siopv process-report trivy-report.json",
+      "uv run siopv dashboard"
+    ],
+    "test": [
+      "uv run pytest tests/ -v --cov=src"
+    ],
+    "lint": [
+      "uv run ruff check src tests",
+      "uv run ruff format src tests"
+    ],
+    "typeCheck": [
+      "uv run mypy src"
+    ]
+  },
+  "timeline": [
+    {
+      "week": 1,
+      "dates": "26 ene - 1 feb",
+      "phase": 1,
+      "deliverables": "Ingestion engine + tests"
+    },
+    {
+      "week": 2,
+      "dates": "2-8 feb",
+      "phase": 2,
+      "deliverables": "RAG (CRAG) + APIs integration"
+    },
+    {
+      "week": 3,
+      "dates": "9-15 feb",
+      "phase": 3,
+      "deliverables": "ML model + SHAP/LIME"
+    },
+    {
+      "week": 4,
+      "dates": "16-22 feb",
+      "phase": 4,
+      "deliverables": "LangGraph orchestration"
+    },
+    {
+      "week": 5,
+      "dates": "23 feb - 1 mar",
+      "phases": [5, 6],
+      "deliverables": "OpenFGA + DLP"
+    },
+    {
+      "week": 6,
+      "dates": "2-8 mar",
+      "phases": [7, 8],
+      "deliverables": "Dashboard + Output"
+    }
+  ],
+  "notes": [
+    "Este archivo queda en el META-PROYECTO, NO en ~/siopv/",
+    "El proyecto generado debe permanecer limpio y exportable",
+    "Actualizar progreso conforme se completan fases",
+    "Consultar Context7 ANTES de usar bibliotecas externas",
+    "Ejecutar agentes de verificación después de cada implementación"
+  ]
+}

@@ -3,6 +3,9 @@ name: code-implementer
 description: Implement code following project patterns and Python 2026 standards. Query Context7 for library syntax. Use sequentially for each layer (domain, ports, usecases, adapters, infrastructure, tests). Saves detailed reports to .ignorar/production-reports/.
 tools: Read, Write, Edit, Grep, Glob, Bash, mcp__context7__resolve-library-id, mcp__context7__query-docs
 model: sonnet
+memory: project
+permissionMode: acceptEdits
+skills: [coding-standards-2026]
 ---
 
 # Code Implementer

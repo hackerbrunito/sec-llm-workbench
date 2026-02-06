@@ -3,6 +3,9 @@ name: security-auditor
 description: Audit code for security vulnerabilities (OWASP Top 10, secrets, injection, LLM security). Saves reports to .ignorar/production-reports/.
 tools: Read, Grep, Glob, WebSearch
 model: sonnet
+memory: project
+permissionMode: plan
+disallowedTools: [Write, Edit]
 ---
 
 # Security Auditor

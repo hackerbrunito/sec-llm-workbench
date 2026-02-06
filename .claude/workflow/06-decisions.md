@@ -25,7 +25,7 @@ El orquestador delega estas decisiones a code-implementer SIN preguntar:
 - structlog (no print)
 - pathlib (no os.path)
 
-### 2. `.claude/rules/core-rules.md`
+### 2. `.claude/rules/tech-stack.md`
 - Tech stack del proyecto
 - Reglas generales
 

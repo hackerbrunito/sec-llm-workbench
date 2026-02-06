@@ -3,6 +3,8 @@ name: test-generator
 description: Generate unit tests automatically for code without coverage. Saves reports to .ignorar/production-reports/.
 tools: Read, Write, Grep, Glob, Bash
 model: sonnet
+memory: project
+permissionMode: acceptEdits
 ---
 
 # Test Generator

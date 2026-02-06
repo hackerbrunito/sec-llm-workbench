@@ -4,6 +4,16 @@ Cómo el orquestador debe invocar a code-implementer y otros agentes.
 
 ---
 
+## Context Hygiene
+
+- Run `/clear` between unrelated tasks
+- Run `/clear` when switching phases
+- After 2 failed correction attempts, `/clear` and reformulate
+- Use subagents for investigation to keep main context clean
+- Monitor context usage with `/context` regularly
+
+---
+
 ## Principio Fundamental
 
 > "Direct agents to work on **one feature at a time** rather than attempting entire applications"
@@ -93,7 +103,7 @@ Task(
 - Layer: domain
 
 ## Spec
-- Project spec: projects/siopv.md
+- Project spec: projects/siopv.json
 - Target directory: ~/siopv/src/siopv/domain/authorization/
 
 ## Task
@@ -124,7 +134,7 @@ Task(
 - Layer: ports
 
 ## Spec
-- Project spec: projects/siopv.md
+- Project spec: projects/siopv.json
 - Target directory: ~/siopv/src/siopv/application/ports/
 
 ## Task
@@ -153,7 +163,7 @@ Task(
 - Layer: adapters
 
 ## Spec
-- Project spec: projects/siopv.md
+- Project spec: projects/siopv.json
 - Target directory: ~/siopv/src/siopv/adapters/authorization/
 
 ## Task
@@ -183,7 +193,7 @@ Task(
 - Layer: adapters
 
 ## Spec
-- Project spec: projects/siopv.md
+- Project spec: projects/siopv.json
 - Target file: ~/siopv/src/siopv/adapters/authorization/openfga_adapter.py
 
 ## Task
