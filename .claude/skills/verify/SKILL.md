@@ -190,6 +190,96 @@ Output format:
 
 Wait for both to complete.
 
+## Tool Schema Invocation (Phase 3 - Programmatic Tool Calling)
+
+Agents use structured JSON schemas to invoke tools with precision and reduced token overhead.
+
+### Schema Structure
+
+Every tool invocation follows this pattern:
+```json
+{
+  "tool": "tool_name",
+  "required_param": "value",
+  "optional_param": "value (if applicable)"
+}
+```
+
+### Wave 1 Agents (Schema Usage %)
+- **best-practices-enforcer:** 60% schema usage (Grep, Read, Bash, save_agent_report)
+- **security-auditor:** 50% schema usage (Grep, Bash, Read, save_agent_report)
+- **hallucination-detector:** 70% schema usage (Grep, Read, context7_resolve_library_id, context7_query_docs, save_agent_report)
+
+### Wave 2 Agents (Partial Schema)
+- **code-reviewer:** 40% schema usage (Read, save_agent_report)
+- **test-generator:** 30% schema usage (Bash, Read, save_agent_report)
+
+### Common Schemas
+
+**File Search:**
+```json
+{
+  "tool": "grep",
+  "pattern": "...",
+  "path": "src",
+  "type": "py"
+}
+```
+
+**Read File:**
+```json
+{
+  "tool": "read",
+  "file_path": "/absolute/path/file.py"
+}
+```
+
+**Run Command:**
+```json
+{
+  "tool": "bash",
+  "command": "uv run pytest tests/"
+}
+```
+
+**Save Report:**
+```json
+{
+  "tool": "save_agent_report",
+  "agent_name": "best-practices-enforcer",
+  "phase": 3,
+  "findings": [...],
+  "summary": {"total": N, "critical": 0, "high": N, "medium": N, "low": N}
+}
+```
+
+**Context7 Queries (hallucination-detector only):**
+```json
+{
+  "tool": "context7_resolve_library_id",
+  "libraryName": "httpx",
+  "query": "async client timeout"
+}
+```
+
+### Validation & Fallback
+
+If agent produces invalid schema:
+1. Schema validation fails → log error
+2. Fall back to natural language tool description
+3. Agent continues with guidance
+
+If schema validation passes:
+- Agent uses structured tool invocation
+- Reduced token overhead (60-70% smaller than natural language)
+- Explicit constraints prevent misuse
+
+### Schema Reference
+
+For complete schema definitions see: `.claude/rules/agent-tool-schemas.md`
+
+---
+
 ### 3. Logging de Agentes (OBLIGATORIO)
 
 Después de ejecutar CADA agente, añadir entrada JSONL a `.build/logs/agents/YYYY-MM-DD.jsonl`:

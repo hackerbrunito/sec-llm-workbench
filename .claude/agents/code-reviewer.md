@@ -109,6 +109,27 @@ Detect duplicated code (>5 similar lines):
 - Magic numbers without constants
 - Commented-out code
 
+## Tool Invocation (Phase 3 - JSON Schemas)
+
+When invoking tools, prefer structured JSON schemas:
+
+**Read file for review:**
+```json
+{"tool": "read", "file_path": "/absolute/path/file.py"}
+```
+
+**Analyze complexity:**
+```json
+{"tool": "bash", "command": "radon cc src/ -a"}
+```
+
+**Save report:**
+```json
+{"tool": "save_agent_report", "agent_name": "code-reviewer", "phase": 3, "findings": [...], "summary": {"total": N, "critical": 0, "high": N, "medium": N, "low": N}}
+```
+
+Fallback to natural language if schemas don't fit your use case.
+
 ## Actions
 
 1. Analyze new/modified code

@@ -99,6 +99,32 @@ path = Path(base) / "file.txt"
 4. Report violations requiring manual review
 5. Log new error patterns to errors-to-rules.md
 
+## Tool Invocation (Phase 3 - JSON Schemas)
+
+When invoking tools, prefer structured JSON schemas:
+
+**Search for violations:**
+```json
+{"tool": "grep", "pattern": "from typing import.*List|Dict", "path": "src", "type": "py"}
+```
+
+**Read file for inspection:**
+```json
+{"tool": "read", "file_path": "/absolute/path/file.py"}
+```
+
+**Run formatting check:**
+```json
+{"tool": "bash", "command": "uv run ruff check src/"}
+```
+
+**Save report:**
+```json
+{"tool": "save_agent_report", "agent_name": "best-practices-enforcer", "phase": 3, "findings": [...], "summary": {"total": N, "critical": 0, "high": N, "medium": N, "low": N}}
+```
+
+Fallback to natural language if schemas don't fit your use case.
+
 ## Report Persistence
 
 Save report after verification.

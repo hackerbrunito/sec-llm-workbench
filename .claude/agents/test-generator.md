@@ -119,6 +119,27 @@ def test_enrichment_with_mock_nvd(mocker):
 uv run pytest --cov=src --cov-report=term-missing --cov-fail-under=80
 ```
 
+## Tool Invocation (Phase 3 - JSON Schemas)
+
+When invoking tools, prefer structured JSON schemas:
+
+**Generate coverage report:**
+```json
+{"tool": "bash", "command": "pytest tests/ --cov=src --cov-report=json"}
+```
+
+**Read function to test:**
+```json
+{"tool": "read", "file_path": "/absolute/path/validators.py"}
+```
+
+**Save report:**
+```json
+{"tool": "save_agent_report", "agent_name": "test-generator", "phase": 3, "findings": [...], "summary": {"total": N, "critical": 0, "high": N, "medium": N, "low": N}}
+```
+
+Fallback to natural language if schemas don't fit your use case.
+
 ## Report Persistence
 
 Save report after generation.

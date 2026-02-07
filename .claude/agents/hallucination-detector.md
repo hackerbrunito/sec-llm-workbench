@@ -55,6 +55,37 @@ For each external library:
 | ChromaDB | Collection API, query syntax |
 | XGBoost | Classifier parameters, fit/predict |
 
+## Tool Invocation (Phase 3 - JSON Schemas)
+
+When invoking tools, prefer structured JSON schemas:
+
+**Find library imports:**
+```json
+{"tool": "grep", "pattern": "^(import|from)\\s+(httpx|pydantic|langgraph|anthropic)", "path": "src", "type": "py"}
+```
+
+**Read file with library usage:**
+```json
+{"tool": "read", "file_path": "/absolute/path/file.py", "offset": 1, "limit": 50}
+```
+
+**Resolve library ID (Context7):**
+```json
+{"tool": "context7_resolve_library_id", "libraryName": "httpx", "query": "AsyncClient timeout configuration"}
+```
+
+**Query library documentation:**
+```json
+{"tool": "context7_query_docs", "libraryId": "/httpx/httpx", "query": "How to set timeout in AsyncClient?"}
+```
+
+**Save report:**
+```json
+{"tool": "save_agent_report", "agent_name": "hallucination-detector", "phase": 3, "findings": [...], "summary": {"total": N, "critical": N, "high": N, "medium": N, "low": N}}
+```
+
+Fallback to natural language if schemas don't fit your use case.
+
 ## Actions
 
 1. Identify all external library imports

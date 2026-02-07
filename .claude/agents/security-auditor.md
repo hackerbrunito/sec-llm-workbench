@@ -105,6 +105,32 @@ logger.info(f"User credentials: {username}:{password}")
 return {"token": token, "password": password}
 ```
 
+## Tool Invocation (Phase 3 - JSON Schemas)
+
+When invoking tools, prefer structured JSON schemas:
+
+**Search for hardcoded secrets:**
+```json
+{"tool": "grep", "pattern": "hardcoded|password|secret|api.?key", "path": "src", "type": "py"}
+```
+
+**Search for SQL injection patterns:**
+```json
+{"tool": "grep", "pattern": "SELECT.*\\{|execute.*f\"|sql.*%", "path": "src", "type": "py"}
+```
+
+**Run security linter:**
+```json
+{"tool": "bash", "command": "bandit -r src/ -f json"}
+```
+
+**Save report:**
+```json
+{"tool": "save_agent_report", "agent_name": "security-auditor", "phase": 3, "findings": [...], "summary": {"total": N, "critical": N, "high": N, "medium": N, "low": N}}
+```
+
+Fallback to natural language if schemas don't fit your use case.
+
 ## Actions
 
 1. Scan code for security patterns
