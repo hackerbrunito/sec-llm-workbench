@@ -1,9 +1,11 @@
 ---
 name: verify
+disable-model-invocation: true
 description: "Ejecuta los 5 agentes mandatorios de verificacion y limpia markers pendientes"
 context: fork
 agent: general-purpose
 argument-hint: "[--fix]"
+allowed-tools: ["Read", "Grep", "Glob", "Bash", "Task"]
 ---
 
 # /verify
@@ -31,19 +33,162 @@ ls $CLAUDE_PROJECT_DIR/.build/checkpoints/pending/ 2>/dev/null
 
 Si no hay archivos pendientes: "No hay archivos pendientes de verificacion"
 
-### 2. Ejecutar Agentes (OBLIGATORIO, EN ORDEN)
+### 2. Ejecutar Agentes (WAVE-BASED PARALLEL)
 
-TODOS deben ejecutarse. Si uno falla, PARAR y reportar.
+TODOS deben ejecutarse en paralelo (2 waves). Si alguno falla, PARAR y reportar.
 
-Para CADA agente, registrar en `.build/logs/agents/YYYY-MM-DD.jsonl`:
+#### Wave 1 (Paralelo - ~7 min max)
 
+Submit 3 agents in parallel with few-shot examples:
+
+**best-practices-enforcer:**
 ```
-Task(subagent_type="best-practices-enforcer", prompt="Verifica archivos Python pendientes: type hints, Pydantic v2, httpx, structlog, pathlib")
-Task(subagent_type="security-auditor", prompt="Audita seguridad: OWASP Top 10, secrets, injection, LLM security")
-Task(subagent_type="hallucination-detector", prompt="Verifica sintaxis de bibliotecas externas contra Context7")
-Task(subagent_type="code-reviewer", prompt="Review calidad: complejidad, DRY, naming, mantenibilidad")
-Task(subagent_type="test-generator", prompt="Genera tests unitarios para modulos sin cobertura")
+Task(subagent_type="best-practices-enforcer", prompt="""Verifica archivos Python pendientes: type hints, Pydantic v2, httpx, structlog, pathlib
+
+EXPECTED OUTPUT STRUCTURE:
+
+## Findings
+
+### 1. Missing Type Hints on Function
+- **File:** src/handlers/input.py:42
+- **Severity:** MEDIUM
+- **Pattern:** Function lacks type hints
+- **Current:** def process_user_input(data):
+- **Expected:** def process_user_input(data: dict[str, Any]) -> ProcessResult:
+- **Fix:** Add modern type hints (dict[str, ...] not typing.Dict)
+
+### 2. Pydantic v1 Pattern Detected
+- **File:** src/models/config.py:15
+- **Severity:** MEDIUM
+- **Pattern:** Using 'class Config' instead of ConfigDict
+- **Fix:** Use ConfigDict(validate_assignment=True) pattern
+
+## Summary
+- Total violations: N
+- CRITICAL: 0
+- MEDIUM: N
+- LOW: N
+
+---
+
+Now audit pending Python files following this exact structure.""")
 ```
+
+**security-auditor:**
+```
+Task(subagent_type="security-auditor", prompt="""Audita seguridad: OWASP Top 10, secrets, injection, LLM security
+
+EXPECTED OUTPUT STRUCTURE:
+
+## Security Findings
+
+### 1. SQL Injection Vulnerability
+- **File:** src/db/queries.py:34
+- **CWE:** CWE-89 (SQL Injection)
+- **Severity:** CRITICAL
+- **Description:** User input directly interpolated without parameterization
+- **Attack Vector:** Attacker injects SQL via user_email parameter
+- **Fix:** Use parameterized queries
+- **OWASP:** A03:2021 – Injection
+
+### 2. Hardcoded API Key
+- **File:** src/config/credentials.py:12
+- **Severity:** CRITICAL
+- **Description:** API key hardcoded in source code
+- **Fix:** Load from environment using os.getenv()
+- **OWASP:** A02:2021 – Cryptographic Failures
+
+## Summary
+- Total findings: N
+- CRITICAL: N (requires immediate fix)
+- HIGH: N
+- MEDIUM: N
+
+---
+
+Now audit pending files following this exact structure. Prioritize CRITICAL/HIGH severity.""")
+```
+
+**hallucination-detector:**
+```
+Task(subagent_type="hallucination-detector", prompt="""Verifica sintaxis de bibliotecas externas contra Context7
+
+EXPECTED OUTPUT STRUCTURE:
+
+## Hallucination Check Results
+
+### ✅ VERIFIED USAGE
+
+#### 1. httpx AsyncClient
+- **Library:** httpx
+- **Pattern:** httpx.AsyncClient(timeout=30.0)
+- **File:** src/api/client.py:15
+- **Context7 Status:** VERIFIED (v0.24.1 docs)
+
+#### 2. Pydantic ConfigDict
+- **Library:** pydantic
+- **Pattern:** model_config = ConfigDict(validate_assignment=True)
+- **File:** src/models/user.py:8
+- **Context7 Status:** VERIFIED (Pydantic v2)
+
+### ⚠️ HALLUCINATED USAGE
+
+#### 1. structlog wrap_logger with wrapper_class
+- **Library:** structlog
+- **Pattern:** structlog.wrap_logger(logger, wrapper_class=...)
+- **File:** src/logging/config.py:22
+- **Status:** UNVERIFIED - Not in docs
+- **Recommendation:** Use make_filtering_bound_logger() instead
+
+## Summary
+- Total usages checked: N
+- VERIFIED: N (match Context7)
+- HALLUCINATED: N (requires correction)
+
+---
+
+Now verify pending files using Context7 queries. Follow this exact structure.""")
+```
+
+Wait for all 3 to complete before proceeding to Wave 2.
+
+#### Wave 2 (Paralelo - ~5 min max)
+
+Submit 2 agents in parallel:
+
+**code-reviewer:**
+```
+Task(subagent_type="code-reviewer", prompt="""Review calidad: complejidad, DRY, naming, mantenibilidad
+
+Focus areas:
+- Cyclomatic complexity (>10 = flag for refactoring)
+- Duplicate code patterns (suggest consolidation)
+- Variable/function naming clarity (camelCase/snake_case consistency)
+- Maintainability: Is this code easily understood by other developers?
+- Performance bottlenecks or inefficient patterns
+
+Provide actionable recommendations.""")
+```
+
+**test-generator:**
+```
+Task(subagent_type="test-generator", prompt="""Genera tests unitarios para modulos sin cobertura
+
+Coverage analysis:
+- Identify functions/methods with <80% coverage
+- Generate pytest-style unit tests
+- Include edge cases (empty inputs, None, exceptions)
+- Mock external dependencies
+- Test both happy path and error paths
+
+Output format:
+- Suggested test file location
+- Test class/function names
+- Number of test cases per function
+- Expected coverage improvement""")
+```
+
+Wait for both to complete.
 
 ### 3. Logging de Agentes (OBLIGATORIO)
 

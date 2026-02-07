@@ -34,17 +34,29 @@
 
 ## Cómo invocar
 
+### Implementación (Sequential)
 ```
-# Implementación
 Task(subagent_type="code-implementer", prompt="Implementa [tarea] en [path]...")
+```
 
-# Verificación
+### Verificación (WAVE-BASED PARALLEL)
+
+#### Wave 1 - Submit 3 agents in parallel
+```
 Task(subagent_type="best-practices-enforcer", prompt="Verifica src/...")
 Task(subagent_type="security-auditor", prompt="Audita src/...")
 Task(subagent_type="hallucination-detector", prompt="Verifica sintaxis de TODO el código...")
+```
+**Wait for all 3 to complete** (~7 min max)
+
+#### Wave 2 - Submit 2 agents in parallel
+```
 Task(subagent_type="code-reviewer", prompt="Review src/...")
 Task(subagent_type="test-generator", prompt="Genera tests...")
 ```
+**Wait for both to complete** (~5 min max)
+
+**Total: ~15 minutes** (vs. ~87 minutes sequential)
 
 ## Reportes Técnicos
 

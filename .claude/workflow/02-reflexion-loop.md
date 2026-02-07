@@ -23,13 +23,18 @@ Para CADA tarea de desarrollo:
 - Orquestador presenta resumen del reporte de code-implementer
 - Esperar aprobación humana para continuar a verificación
 
-## 5. REFLECTION (Delegado a 5 agentes)
-Ejecutar 5 agentes de verificación:
+## 5. REFLECTION (Delegado a 5 agentes - PARALELO en waves)
+
+### Wave 1 (Paralelo - ~7 min)
 1. best-practices-enforcer → reporta ~500+ líneas
 2. security-auditor → reporta ~500+ líneas
 3. hallucination-detector → reporta ~500+ líneas
+
+### Wave 2 (Paralelo - ~5 min)
 4. code-reviewer → reporta ~500+ líneas
 5. test-generator → reporta ~500+ líneas
+
+**Total reflection time: ~15 min** (vs. ~87 min sequential)
 
 ## 6. CHECKPOINT HUMANO
 - Orquestador presenta resumen de reportes de verificación
