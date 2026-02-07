@@ -5,6 +5,8 @@ tools: Read, Write, Grep, Glob, Bash
 model: sonnet
 memory: project
 permissionMode: acceptEdits
+cache_control: ephemeral
+budget_tokens: 11000
 ---
 
 # Test Generator

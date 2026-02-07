@@ -5,6 +5,8 @@ tools: Read, Write, Bash
 model: sonnet
 memory: project
 permissionMode: acceptEdits
+cache_control: ephemeral
+budget_tokens: 10000
 ---
 
 # XAI Explainer

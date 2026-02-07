@@ -7,6 +7,8 @@ memory: project
 permissionMode: plan
 disallowedTools: [Write, Edit]
 skills: [coding-standards-2026]
+cache_control: ephemeral
+budget_tokens: 8000
 ---
 
 # Best Practices Enforcer

@@ -27,7 +27,21 @@
 | Agents | @.claude/workflow/04-agents.md |
 | Before commit | @.claude/workflow/05-before-commit.md |
 | Auto decisions | @.claude/workflow/06-decisions.md |
-| Orchestrator invocation | @.claude/workflow/07-orchestrator-invocation.md |
-| Python standards | @.claude/docs/python-standards.md |
 | Error history | @.claude/docs/errors-to-rules.md |
-| Techniques | @.claude/docs/techniques.md |
+
+## On-Demand References (loaded via skills, NOT at startup)
+
+| Topic | Skill / File |
+|-------|-------------|
+| Orchestrator invocation | `/orchestrator-protocol` or read `.claude/workflow/07-orchestrator-invocation.md` |
+| Python standards | `/coding-standards-2026` skill |
+| Techniques catalog | `/techniques-reference` or read `.claude/docs/techniques.md` |
+
+## Compact Instructions
+
+When compacting context, preserve:
+- Current project name and phase
+- Active task description and progress
+- Pending verification file list
+- Error patterns from errors-to-rules.md
+- Key architectural decisions made in this session

@@ -1,0 +1,26 @@
+{
+  "name": "vibe-coding-2026",
+  "version": "1.0.0",
+  "description": "Python 2026 Vibe Coding framework with verification agents, self-correcting error system, and full traceability",
+  "author": {
+    "name": "Bruno"
+  },
+  "license": "MIT",
+  "claude_code_min_version": "1.0.0",
+  "capabilities": {
+    "agents": 8,
+    "skills": 16,
+    "hooks": 12,
+    "mcp_servers": ["context7"],
+    "rules": 3,
+    "workflows": 7
+  },
+  "tags": [
+    "python",
+    "security",
+    "best-practices",
+    "pydantic-v2",
+    "hexagonal-architecture",
+    "verification-agents"
+  ]
+}

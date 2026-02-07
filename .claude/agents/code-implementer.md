@@ -6,6 +6,8 @@ model: sonnet
 memory: project
 permissionMode: acceptEdits
 skills: [coding-standards-2026]
+cache_control: ephemeral
+budget_tokens: 12000
 ---
 
 # Code Implementer

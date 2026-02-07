@@ -1,0 +1,29 @@
+# Secrets and credentials
+.env
+.env.*
+!.env.example
+credentials.json
+*.pem
+*.key
+
+# Build artifacts and logs
+.build/logs/agents/
+.build/logs/sessions/
+.build/logs/decisions/
+
+# Node modules
+node_modules/
+
+# Private files
+.private/
+
+# Python cache
+__pycache__/
+*.pyc
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# IDE
+.vscode/
+.idea/

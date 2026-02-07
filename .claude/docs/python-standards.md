@@ -83,14 +83,29 @@ class Vulnerability(BaseModel):
 import httpx
 
 async def fetch_cve(cve_id: str) -> dict[str, Any]:
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.get(
             f"https://api.nvd.nist.gov/cve/{cve_id}",
-            timeout=30.0,
+        )
+        response.raise_for_status()
+        return response.json()
+
+# O con timeouts específicos por operación
+async def fetch_with_custom_timeout(url: str) -> dict[str, Any]:
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            url,
+            timeout=httpx.Timeout(10.0, connect=5.0, read=30.0),
         )
         response.raise_for_status()
         return response.json()
 ```
+
+### Timeouts Recomendados
+- **Default (API calls):** 30.0 segundos
+- **Health checks / Pings:** 5.0-10.0 segundos
+- **Large file downloads:** 60.0-120.0 segundos
+- **Connection establishment:** 5.0 segundos
 
 ### Prohibido
 ```python
@@ -98,6 +113,7 @@ import requests  # ❌
 
 def fetch_cve(cve_id: str) -> dict:
     response = requests.get(url)  # ❌ Sync
+    response = requests.get(url, timeout=None)  # ❌ No timeout
     ...
 ```
 

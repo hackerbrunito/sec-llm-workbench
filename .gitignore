@@ -8,6 +8,10 @@
 .env.*.local
 !.env.example
 
+# MCP configuration (contains API keys)
+.mcp.json
+!.mcp.json.example
+
 # Local settings (contiene paths específicos de máquina)
 .claude/settings.local.json
 

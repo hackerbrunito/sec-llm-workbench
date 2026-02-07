@@ -435,8 +435,8 @@
       ]
     }
   ],
-  "currentPhase": 5,
-  "currentStatus": "Phase 5 (OpenFGA Authorization) completado. Ready for Phase 6 (DLP - Presidio).",
+  "currentPhase": 6,
+  "currentStatus": "Phase 6 (DLP - Presidio) pendiente. Phase 5 (OpenFGA Authorization) completado.",
   "metrics": {
     "totalTests": 714,
     "coverage": "76%",

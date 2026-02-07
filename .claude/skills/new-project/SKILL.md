@@ -1,8 +1,10 @@
 ---
 name: new-project
+disable-model-invocation: true
 description: "Crea un nuevo proyecto Python profesional con arquitectura hexagonal"
 argument-hint: "[name] [path]"
 context: fork
+allowed-tools: ["Read", "Write", "Edit", "Bash", "Glob", "Grep"]
 ---
 
 # /new-project

@@ -1,8 +1,10 @@
 ---
 name: run-tests
+disable-model-invocation: true
 description: "Ejecutar suite de tests con cobertura y reportes"
 argument-hint: "[scope]"
 context: fork
+allowed-tools: ["Read", "Bash", "Glob", "Grep"]
 ---
 
 # /run-tests

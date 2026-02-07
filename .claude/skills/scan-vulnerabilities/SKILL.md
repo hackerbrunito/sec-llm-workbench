@@ -1,8 +1,10 @@
 ---
 name: scan-vulnerabilities
+disable-model-invocation: true
 description: "Escanear y procesar vulnerabilidades desde un reporte Trivy"
 context: fork
 argument-hint: "[trivy-json-path]"
+allowed-tools: ["Read", "Grep", "Glob", "Bash", "WebSearch", "WebFetch"]
 ---
 
 # /scan-vulnerabilities

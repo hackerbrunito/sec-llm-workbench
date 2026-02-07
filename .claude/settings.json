@@ -2,7 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "env": {
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "60",
-    "ENABLE_TOOL_SEARCH": "auto"
+    "ENABLE_TOOL_SEARCH": "auto:5",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
   "attribution": {
     "commit": "none"
@@ -13,11 +14,18 @@
     "command": "phase=$(cat .build/current-phase 2>/dev/null || echo 'no-phase'); pending=$(ls .build/checkpoints/pending/ 2>/dev/null | wc -l | tr -d ' '); echo \"Phase: $phase | Pending: $pending\""
   },
   "sandbox": {
-    "enabled": true,
-    "autoAllowBashIfSandboxed": true,
+    "mode": "auto-allow",
+    "permissions": {
+      "write": {
+        "allowOnly": ["."],
+        "denyWithinAllow": [".env", ".env.local", ".env.*", "credentials.json", "*.pem", "*.key"]
+      }
+    },
     "network": {
-      "allowedDomains": ["pypi.org", "github.com", "api.anthropic.com"]
-    }
+      "allowedDomains": ["pypi.org", "api.github.com", "api.anthropic.com", "docs.pydantic.dev", "www.structlog.org", "typer.tiangolo.com", "www.anthropic.com", "docs.anthropic.com", "claude.com"]
+    },
+    "allowUnsandboxedCommands": false,
+    "allowUnixSockets": false
   },
   "permissions": {
     "deny": [
@@ -25,7 +33,13 @@
       "Bash(rm -rf ~)",
       "Bash(sudo:*)",
       "Bash(git push --force:*)",
-      "Bash(git reset --hard:*)"
+      "Bash(git reset --hard:*)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Edit(.env)",
+      "Edit(.env.*)",
+      "Read(credentials*)",
+      "Edit(credentials*)"
     ],
     "ask": [
       "Bash(git push:*)",
@@ -84,7 +98,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "w=''; command -v npx >/dev/null 2>&1 || w=\"${w}npx not found. \"; command -v node >/dev/null 2>&1 || w=\"${w}node not found. \"; [ -f \"$CLAUDE_PROJECT_DIR/.claude/mcp.json\" ] || w=\"${w}.claude/mcp.json missing. \"; [ -f \"$CLAUDE_PROJECT_DIR/.env\" ] && grep -q 'UPSTASH_API_KEY=.' \"$CLAUDE_PROJECT_DIR/.env\" || w=\"${w}UPSTASH_API_KEY not set in .env. \"; if [ -n \"$w\" ]; then echo \"MCP Health WARN: $w Run /mcp to verify.\"; else echo \"MCP Health: OK\"; fi"
+            "command": "w=''; command -v npx >/dev/null 2>&1 || w=\"${w}npx not found. \"; command -v node >/dev/null 2>&1 || w=\"${w}node not found. \"; [ -f \"$CLAUDE_PROJECT_DIR/.mcp.json\" ] || w=\"${w}.mcp.json missing. \"; [ -f \"$CLAUDE_PROJECT_DIR/.env\" ] && grep -q 'UPSTASH_API_KEY=.' \"$CLAUDE_PROJECT_DIR/.env\" || w=\"${w}UPSTASH_API_KEY not set in .env. \"; if [ -n \"$w\" ]; then echo \"MCP Health WARN: $w Run /mcp to verify.\"; else echo \"MCP Health: OK\"; fi"
           }
         ]
       },
@@ -197,6 +211,26 @@
           {
             "type": "command",
             "command": "echo '{\"event\":\"session_end\",\"timestamp\":\"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'\"}' >> .build/logs/sessions/$(date +%Y-%m-%d).jsonl 2>/dev/null || true; rm -f /tmp/claude/*.tmp 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"event\":\"notification\",\"timestamp\":\"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'\",\"session_id\":\"'$(cat .build/current-session-id 2>/dev/null || echo unknown)'\"}' >> .build/logs/agents/$(date +%Y-%m-%d).jsonl 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"event\":\"permission_request\",\"timestamp\":\"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'\",\"session_id\":\"'$(cat .build/current-session-id 2>/dev/null || echo unknown)'\"}' >> .build/logs/agents/$(date +%Y-%m-%d).jsonl 2>/dev/null || true"
           }
         ]
       }

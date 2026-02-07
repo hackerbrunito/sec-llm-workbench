@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Project Configuration Schema",
+  "description": "Schema for validating projects/*.json configuration files",
+  "type": "object",
+  "required": ["name", "phase", "status"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Project name (lowercase, alphanumeric + hyphens)"
+    },
+    "phase": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "Current phase number (0-10)"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["not_started", "in_progress", "paused", "completed", "archived"],
+      "description": "Project status"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Project description (optional)"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]+$"
+      },
+      "description": "Project tags for categorization (optional)"
+    },
+    "deadline": {
+      "type": "string",
+      "format": "date",
+      "description": "Project deadline in YYYY-MM-DD format (optional)"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata (optional)",
+      "additionalProperties": true
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last update timestamp (auto-generated)"
+    }
+  },
+  "additionalProperties": false
+}
