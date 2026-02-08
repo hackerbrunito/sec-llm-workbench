@@ -21,6 +21,8 @@ Limpia markers en `.build/checkpoints/pending/`
 
 ## Verification Thresholds
 
+**→ See `.claude/rules/verification-thresholds.md` for complete threshold definitions**
+
 | Check | PASS | FAIL |
 |-------|------|------|
 | code-reviewer score | >= 9.0/10 | < 9.0/10 |

@@ -15,6 +15,7 @@ budget_tokens: 9000
 Perform automatic code review focused on quality and maintainability.
 
 ## Review Checklist
+<!-- cache_control: start -->
 
 ### 1. Cyclomatic Complexity
 
@@ -109,26 +110,32 @@ Detect duplicated code (>5 similar lines):
 - Magic numbers without constants
 - Commented-out code
 
+<!-- cache_control: end -->
+
 ## Tool Invocation (Phase 3 - JSON Schemas)
+<!-- cache_control: start -->
 
-When invoking tools, prefer structured JSON schemas:
+Use structured JSON schemas for tool invocation to reduce token consumption (-37%) and improve precision.
 
-**Read file for review:**
+### Example 1: Inspect Code for Complexity
 ```json
-{"tool": "read", "file_path": "/absolute/path/file.py"}
+{
+  "tool": "read",
+  "file_path": "src/handlers/complex_handler.py"
+}
 ```
 
-**Analyze complexity:**
+### Example 2: Run Complexity Analysis
 ```json
-{"tool": "bash", "command": "radon cc src/ -a"}
+{
+  "tool": "bash",
+  "command": "radon cc src/ -a"
+}
 ```
 
-**Save report:**
-```json
-{"tool": "save_agent_report", "agent_name": "code-reviewer", "phase": 3, "findings": [...], "summary": {"total": N, "critical": 0, "high": N, "medium": N, "low": N}}
-```
+**Fallback:** Use natural language tool descriptions if schemas don't fit your use case.
 
-Fallback to natural language if schemas don't fit your use case.
+<!-- cache_control: end -->
 
 ## Actions
 
@@ -165,6 +172,7 @@ Examples:
 If the directory doesn't exist, create it before writing.
 
 ## Report Format
+<!-- cache_control: start -->
 
 ```markdown
 # Code Review Report - Phase [N]
@@ -286,3 +294,5 @@ If the directory doesn't exist, create it before writing.
 - N HIGH priority issues to address
 - N MEDIUM priority issues to consider
 ```
+
+<!-- cache_control: end -->

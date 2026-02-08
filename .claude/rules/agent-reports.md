@@ -36,7 +36,7 @@ For verification cycles, agents are invoked in 2 waves:
 - code-reviewer
 - test-generator
 
-**Total time: ~15 minutes** (vs. ~87 minutes sequential, 82% improvement)
+**Total time: ~12 minutes** (vs. ~87 minutes sequential, 86% improvement)
 
 Each agent's report should include:
 - Execution wave number (Wave 1 or Wave 2)

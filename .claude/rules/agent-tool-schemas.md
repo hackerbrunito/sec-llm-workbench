@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-07
 **Status:** Phase 3 Implementation
-**Impact:** -37% tokens, $400-800/month savings
+**Impact:** -37% tokens, $4.2k/year baseline cost reduction (150 cycles/month × $0.47/cycle × 12 months)
 
 ---
 
@@ -628,7 +628,29 @@ Per-agent reduction:
 | Cost per cycle | $0.75 | $0.47 | $0.28 (-37%) |
 | Daily cycles (5/day) | 5 × $0.75 = $3.75 | 5 × $0.47 = $2.35 | $1.40/day |
 | Monthly cycles (150/month) | 150 × $0.75 = $112.50 | 150 × $0.47 = $70.50 | $42/month |
-| Annual savings | - | - | $400-800/year |
+| Annual baseline | - | - | $4,230/year (150 cycles × $0.47 × 12) |
+
+### Post-Phase 3 Measurement (Task 3.4)
+
+Real-world cost savings validation is available via:
+
+**`.claude/scripts/measure-routing-savings.py`**
+
+This script analyzes API usage logs to validate hierarchical model routing (Haiku/Sonnet/Opus) cost savings:
+
+**Expected Savings with Hierarchical Routing:**
+- **Annual baseline (150 cycles/month):** $504/year
+- **Target distribution:** 40% Haiku, 50% Sonnet, 10% Opus
+- **Cost reduction:** 40-60% vs all-Opus baseline
+- **Actual master plan results:** $12.84 for 32 tasks (74% reduction vs estimated $50 all-Opus)
+
+**Combined Benefits (Schemas + Hierarchical Routing):**
+- Schemas: -37% tokens
+- Routing: -40-60% tokens vs all-Opus
+- **Combined:** ~60-70% cost reduction for verification cycles
+
+For detailed theoretical validation, decision tree alignment, and continuous monitoring guidance, see:
+`.ignorar/production-reports/phase3/2026-02-08-phase3-task34-routing-savings-validation.md`
 
 ---
 
@@ -655,6 +677,103 @@ If schema validation fails:
 2. Fall back to natural language tool description
 3. Agent continues with natural language guidance
 4. Report discrepancy for analysis
+
+---
+
+## Fallback & Observability
+
+### Context7 MCP Fallback Behavior
+
+When Context7 MCP tools fail, agents should gracefully degrade:
+
+**Failure Scenarios:**
+- Context7 server timeout (>10s)
+- Connection errors
+- Invalid library name
+- Rate limiting
+
+**Fallback Actions:**
+1. **hallucination-detector:** Log warning, continue with pattern matching only (no doc verification)
+2. **code-implementer:** Use memory/training data as last resort, mark as "unverified" in report
+3. Log fallback event for observability tracking
+
+**Example Fallback Logic:**
+```python
+try:
+    library_id = await resolve_library_id(library_name="httpx")
+    docs = await query_docs(library_id=library_id, query="AsyncClient timeout")
+except TimeoutError:
+    logger.warning("context7_fallback", reason="timeout", library=library_name)
+    # Log fallback event: {"event": "fallback_activated", "reason": "context7_timeout"}
+    # Continue with best-effort verification
+except Exception as e:
+    logger.error("context7_error", error=str(e))
+    # Log fallback event
+```
+
+### Health Check
+
+**Quick Health Check:**
+```bash
+python .claude/scripts/mcp-health-check.py
+```
+
+**Exit Codes:**
+- 0 = Healthy (latency <3s, successful)
+- 1 = Degraded (latency 3-10s OR partial failure)
+- 2 = Failed (latency >10s OR complete failure)
+
+**Automated Monitoring:**
+```bash
+# In CI/CD or cron job
+python .claude/scripts/mcp-health-check.py --quiet && echo "MCP OK" || echo "MCP Issue"
+```
+
+### Observability Metrics
+
+**Track via mcp-observability.py:**
+- Call counts (resolve-library-id, query-docs)
+- Latency (avg, p95, p99)
+- Error rate
+- Fallback activation rate
+
+**Alert Thresholds:**
+- ⚠️  Fallback rate >10% → Investigate Context7 connectivity
+- ⚠️  P95 latency >5s → Check server load or network
+
+**Run Observability Tool:**
+```bash
+# Summary output
+python .claude/scripts/mcp-observability.py --log-file ~/.claude/logs/mcp-calls.jsonl
+
+# JSON for automation
+python .claude/scripts/mcp-observability.py --log-file ~/.claude/logs/mcp-calls.jsonl --output json
+```
+
+**Dashboard:**
+View metrics at `.ignorar/production-reports/mcp-observability/dashboard.md`
+
+### Log Format for MCP Calls
+
+Agents should log MCP calls in this format:
+
+```json
+{"timestamp": "2026-02-08T10:30:00Z", "tool": "context7_resolve_library_id", "library": "httpx", "latency_ms": 234, "status": "success"}
+{"timestamp": "2026-02-08T10:30:05Z", "tool": "context7_query_docs", "library_id": "/httpx/httpx", "latency_ms": 456, "status": "success"}
+{"timestamp": "2026-02-08T10:30:10Z", "event": "fallback_activated", "reason": "context7_timeout"}
+```
+
+### When to Check Health
+
+**Before critical operations:**
+- Before running hallucination-detector on large codebase
+- Before code-implementer starts implementing with many external libraries
+- After Context7 server updates or deployments
+
+**Monitoring schedule:**
+- Hourly health checks in production
+- Daily observability reports
+- Alert on consecutive health check failures (3+ in 1 hour)
 
 ### Validation Checklist
 

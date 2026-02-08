@@ -37,6 +37,12 @@ Si no hay archivos pendientes: "No hay archivos pendientes de verificacion"
 
 TODOS deben ejecutarse en paralelo (2 waves). Si alguno falla, PARAR y reportar.
 
+**Orchestration Reference:** `.claude/scripts/orchestrate-parallel-verification.py`
+- Wave-based parallel execution (Wave 1: 3 agents ~7 min, Wave 2: 2 agents ~5 min)
+- Threshold validation per `.claude/rules/verification-thresholds.md`
+- JSONL logging to `.build/logs/agents/YYYY-MM-DD.jsonl`
+- Automated pending marker cleanup on success
+
 #### Wave 1 (Paralelo - ~7 min max)
 
 Submit 3 agents in parallel with few-shot examples:

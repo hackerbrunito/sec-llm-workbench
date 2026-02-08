@@ -14,6 +14,7 @@ budget_tokens: 11000
 Generate tests automatically for new code or code without coverage.
 
 ## Test Generation Process
+<!-- cache_control: start -->
 
 ### 1. Identify Code Without Tests
 
@@ -119,26 +120,32 @@ def test_enrichment_with_mock_nvd(mocker):
 uv run pytest --cov=src --cov-report=term-missing --cov-fail-under=80
 ```
 
+<!-- cache_control: end -->
+
 ## Tool Invocation (Phase 3 - JSON Schemas)
+<!-- cache_control: start -->
 
-When invoking tools, prefer structured JSON schemas:
+Use structured JSON schemas for tool invocation to reduce token consumption (-37%) and improve precision.
 
-**Generate coverage report:**
+### Example 1: Generate Coverage Report
 ```json
-{"tool": "bash", "command": "pytest tests/ --cov=src --cov-report=json"}
+{
+  "tool": "bash",
+  "command": "pytest tests/ --cov=src --cov-report=json"
+}
 ```
 
-**Read function to test:**
+### Example 2: Inspect Function to Test
 ```json
-{"tool": "read", "file_path": "/absolute/path/validators.py"}
+{
+  "tool": "read",
+  "file_path": "src/validators/input_validator.py"
+}
 ```
 
-**Save report:**
-```json
-{"tool": "save_agent_report", "agent_name": "test-generator", "phase": 3, "findings": [...], "summary": {"total": N, "critical": 0, "high": N, "medium": N, "low": N}}
-```
+**Fallback:** Use natural language tool descriptions if schemas don't fit your use case.
 
-Fallback to natural language if schemas don't fit your use case.
+<!-- cache_control: end -->
 
 ## Report Persistence
 
@@ -167,6 +174,7 @@ Examples:
 If the directory doesn't exist, create it before writing.
 
 ## Report Format
+<!-- cache_control: start -->
 
 ```markdown
 # Test Generation Report - Phase [N]
@@ -289,3 +297,5 @@ TOTAL                               215     25    88%
 - Coverage: X% → Y%
 - Target 80%: ✅ Achieved / ❌ N% remaining
 ```
+
+<!-- cache_control: end -->

@@ -15,6 +15,7 @@ budget_tokens: 10000
 Verify generated code against official documentation to detect hallucinations.
 
 ## Verification Process
+<!-- cache_control: start -->
 
 ### 1. Extract Libraries Used
 
@@ -55,36 +56,34 @@ For each external library:
 | ChromaDB | Collection API, query syntax |
 | XGBoost | Classifier parameters, fit/predict |
 
+<!-- cache_control: end -->
+
 ## Tool Invocation (Phase 3 - JSON Schemas)
+<!-- cache_control: start -->
 
-When invoking tools, prefer structured JSON schemas:
+Use structured JSON schemas for tool invocation to reduce token consumption (-37%) and improve precision.
 
-**Find library imports:**
+### Example 1: Resolve httpx Library ID
 ```json
-{"tool": "grep", "pattern": "^(import|from)\\s+(httpx|pydantic|langgraph|anthropic)", "path": "src", "type": "py"}
+{
+  "tool": "context7_resolve_library_id",
+  "libraryName": "httpx",
+  "query": "AsyncClient timeout parameter"
+}
 ```
 
-**Read file with library usage:**
+### Example 2: Query httpx Documentation
 ```json
-{"tool": "read", "file_path": "/absolute/path/file.py", "offset": 1, "limit": 50}
+{
+  "tool": "context7_query_docs",
+  "libraryId": "/httpx/httpx",
+  "query": "How to set timeout in AsyncClient?"
+}
 ```
 
-**Resolve library ID (Context7):**
-```json
-{"tool": "context7_resolve_library_id", "libraryName": "httpx", "query": "AsyncClient timeout configuration"}
-```
+**Fallback:** Use natural language tool descriptions if schemas don't fit your use case.
 
-**Query library documentation:**
-```json
-{"tool": "context7_query_docs", "libraryId": "/httpx/httpx", "query": "How to set timeout in AsyncClient?"}
-```
-
-**Save report:**
-```json
-{"tool": "save_agent_report", "agent_name": "hallucination-detector", "phase": 3, "findings": [...], "summary": {"total": N, "critical": N, "high": N, "medium": N, "low": N}}
-```
-
-Fallback to natural language if schemas don't fit your use case.
+<!-- cache_control: end -->
 
 ## Actions
 
@@ -121,6 +120,7 @@ Examples:
 If the directory doesn't exist, create it before writing.
 
 ## Report Format
+<!-- cache_control: start -->
 
 ```markdown
 # Hallucination Detection Report - Phase [N]
@@ -220,3 +220,5 @@ If the directory doesn't exist, create it before writing.
 - N hallucinations detected
 - See "Hallucinations Detected" for details and fixes
 ```
+
+<!-- cache_control: end -->

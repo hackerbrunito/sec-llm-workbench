@@ -15,6 +15,7 @@ budget_tokens: 10000
 Audit code for security vulnerabilities based on OWASP Top 10.
 
 ## Security Checks
+<!-- cache_control: start -->
 
 ### 1. Injection (SQL, Command, LDAP)
 
@@ -105,31 +106,35 @@ logger.info(f"User credentials: {username}:{password}")
 return {"token": token, "password": password}
 ```
 
+<!-- cache_control: end -->
+
 ## Tool Invocation (Phase 3 - JSON Schemas)
+<!-- cache_control: start -->
 
-When invoking tools, prefer structured JSON schemas:
+Use structured JSON schemas for tool invocation to reduce token consumption (-37%) and improve precision.
 
-**Search for hardcoded secrets:**
+### Example 1: Search for Hardcoded Secrets
 ```json
-{"tool": "grep", "pattern": "hardcoded|password|secret|api.?key", "path": "src", "type": "py"}
+{
+  "tool": "grep",
+  "pattern": "hardcoded|password|secret|api_key|token",
+  "path": "src",
+  "type": "py",
+  "output_mode": "content"
+}
 ```
 
-**Search for SQL injection patterns:**
+### Example 2: Run Security Linter
 ```json
-{"tool": "grep", "pattern": "SELECT.*\\{|execute.*f\"|sql.*%", "path": "src", "type": "py"}
+{
+  "tool": "bash",
+  "command": "bandit -r src/ -f json"
+}
 ```
 
-**Run security linter:**
-```json
-{"tool": "bash", "command": "bandit -r src/ -f json"}
-```
+**Fallback:** Use natural language tool descriptions if schemas don't fit your use case.
 
-**Save report:**
-```json
-{"tool": "save_agent_report", "agent_name": "security-auditor", "phase": 3, "findings": [...], "summary": {"total": N, "critical": N, "high": N, "medium": N, "low": N}}
-```
-
-Fallback to natural language if schemas don't fit your use case.
+<!-- cache_control: end -->
 
 ## Actions
 
@@ -166,6 +171,7 @@ Examples:
 If the directory doesn't exist, create it before writing.
 
 ## Report Format
+<!-- cache_control: start -->
 
 ```markdown
 # Security Audit Report - Phase [N]
@@ -246,3 +252,5 @@ If the directory doesn't exist, create it before writing.
 **SECURITY AUDIT FAILED** ❌
 - N CRITICAL/HIGH findings require immediate attention
 ```
+
+<!-- cache_control: end -->

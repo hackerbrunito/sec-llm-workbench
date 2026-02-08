@@ -3,6 +3,7 @@
 # Este hook se ejecuta ANTES de cualquier comando Bash
 # Solo actua si el comando es "git commit"
 # Output format: hookSpecificOutput (verified via Context7 2026-01-27)
+# Reference: .claude/rules/verification-thresholds.md
 
 set -euo pipefail
 

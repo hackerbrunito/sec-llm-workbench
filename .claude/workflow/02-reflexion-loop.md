@@ -14,10 +14,11 @@ Para CADA tarea de desarrollo:
 - Preparar prompt detallado para code-implementer
 
 ## 3. ACTION (Delegado a code-implementer)
-- Orquestador delega a `code-implementer`
+- Orquestador delega a `code-implementer` (modelo: Sonnet default, Opus si >5 módulos)
 - code-implementer consulta Context7 para TODO el código (no solo bibliotecas)
 - code-implementer genera código con técnicas/patrones modernos
 - code-implementer reporta resultado (~500+ líneas, flexible)
+- **Modelo:** Ver `.claude/rules/model-selection-strategy.md` para routing
 
 ## 4. CHECKPOINT HUMANO
 - Orquestador presenta resumen del reporte de code-implementer
@@ -25,16 +26,34 @@ Para CADA tarea de desarrollo:
 
 ## 5. REFLECTION (Delegado a 5 agentes - PARALELO en waves)
 
-### Wave 1 (Paralelo - ~7 min)
+### Wave 1 (Paralelo - ~7 min max)
+Submit 3 agents in parallel (all use Sonnet):
 1. best-practices-enforcer → reporta ~500+ líneas
 2. security-auditor → reporta ~500+ líneas
 3. hallucination-detector → reporta ~500+ líneas
 
-### Wave 2 (Paralelo - ~5 min)
+**Wait for all 3 to complete before proceeding to Wave 2**
+
+### Wave 2 (Paralelo - ~5 min max)
+Submit 2 agents in parallel (all use Sonnet):
 4. code-reviewer → reporta ~500+ líneas
 5. test-generator → reporta ~500+ líneas
 
-**Total reflection time: ~15 min** (vs. ~87 min sequential)
+**Wait for both to complete**
+
+**Total reflection time: ~12 min** (vs. ~87 min sequential, 86% improvement)
+**Modelo:** Todos usan Sonnet (pattern recognition sin full project context)
+
+### Orchestration Script
+
+The `/verify` skill uses `.claude/scripts/orchestrate-parallel-verification.py` to:
+- Identify pending files in `.build/checkpoints/pending/`
+- Execute Wave 1 agents in parallel
+- Check thresholds (PASS/FAIL) per `.claude/rules/verification-thresholds.md`
+- If Wave 1 passes, execute Wave 2 agents in parallel
+- Log results to `.build/logs/agents/YYYY-MM-DD.jsonl`
+- Clear pending markers if all agents pass
+- Return exit code (0 = success, 1 = failure)
 
 ## 6. CHECKPOINT HUMANO
 - Orquestador presenta resumen de reportes de verificación

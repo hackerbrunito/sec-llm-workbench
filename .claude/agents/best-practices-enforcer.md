@@ -16,6 +16,7 @@ budget_tokens: 8000
 Verify and auto-correct Python 2026 best practices violations.
 
 ## Verification Checklist
+<!-- cache_control: start -->
 
 ### 1. Type Hints (Python 3.11+)
 
@@ -91,6 +92,8 @@ from pathlib import Path
 path = Path(base) / "file.txt"
 ```
 
+<!-- cache_control: end -->
+
 ## Actions
 
 1. Scan code in target directory
@@ -100,30 +103,34 @@ path = Path(base) / "file.txt"
 5. Log new error patterns to errors-to-rules.md
 
 ## Tool Invocation (Phase 3 - JSON Schemas)
+<!-- cache_control: start -->
 
-When invoking tools, prefer structured JSON schemas:
+Use structured JSON schemas for tool invocation to reduce token consumption (-37%) and improve precision.
 
-**Search for violations:**
+### Example 1: Find Pydantic Violations
 ```json
-{"tool": "grep", "pattern": "from typing import.*List|Dict", "path": "src", "type": "py"}
+{
+  "tool": "grep",
+  "pattern": "from typing import.*List|Dict|Optional|Union",
+  "path": "src",
+  "type": "py"
+}
 ```
 
-**Read file for inspection:**
+### Example 2: Save Report
 ```json
-{"tool": "read", "file_path": "/absolute/path/file.py"}
+{
+  "tool": "save_agent_report",
+  "agent_name": "best-practices-enforcer",
+  "phase": 3,
+  "findings": [],
+  "summary": {"total": 0, "critical": 0, "high": 0, "medium": 0, "low": 0}
+}
 ```
 
-**Run formatting check:**
-```json
-{"tool": "bash", "command": "uv run ruff check src/"}
-```
+**Fallback:** Use natural language tool descriptions if schemas don't fit your use case.
 
-**Save report:**
-```json
-{"tool": "save_agent_report", "agent_name": "best-practices-enforcer", "phase": 3, "findings": [...], "summary": {"total": N, "critical": 0, "high": N, "medium": N, "low": N}}
-```
-
-Fallback to natural language if schemas don't fit your use case.
+<!-- cache_control: end -->
 
 ## Report Persistence
 
@@ -152,6 +159,7 @@ Examples:
 If the directory doesn't exist, create it before writing.
 
 ## Report Format
+<!-- cache_control: start -->
 
 ```markdown
 # Best Practices Report - Phase [N]
@@ -216,3 +224,5 @@ If the directory doesn't exist, create it before writing.
 - N violations require manual attention
 - See "Manual Review Required" section
 ```
+
+<!-- cache_control: end -->
