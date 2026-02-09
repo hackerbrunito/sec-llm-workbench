@@ -1,0 +1,232 @@
+{
+  "status": "\u2705 PASS",
+  "total_costs": {
+    "all-opus": 2.5199999999999996,
+    "hierarchical": 0.47039999999999993,
+    "hybrid": 0.2457
+  },
+  "savings_vs_opus_pct": 90.3,
+  "savings_vs_hierarchical_pct": 47.8,
+  "cycles": [
+    {
+      "cycle": 1,
+      "scenario": {
+        "name": "Small module",
+        "lines": 300,
+        "density": 0.05
+      },
+      "results": {
+        "all-opus": {
+          "strategy": "all-opus",
+          "model": "opus",
+          "scan_cost": 0.0,
+          "deep_dive_cost": 0.135,
+          "total_cost": 0.135,
+          "findings": 15,
+          "scan_findings": 0,
+          "deep_dive_confirmations": 15,
+          "false_positives": 0
+        },
+        "hierarchical": {
+          "strategy": "hierarchical",
+          "model": "sonnet",
+          "scan_cost": 0.0252,
+          "deep_dive_cost": 0.0,
+          "total_cost": 0.0252,
+          "findings": 15,
+          "scan_findings": 15,
+          "deep_dive_confirmations": 0,
+          "false_positives": 0
+        },
+        "hybrid": {
+          "strategy": "hybrid",
+          "model": "haiku+sonnet",
+          "scan_cost": 0.0005625,
+          "deep_dive_cost": 0.0126,
+          "total_cost": 0.0131625,
+          "findings": 15,
+          "scan_findings": 15,
+          "deep_dive_confirmations": 15,
+          "false_positives": 0
+        }
+      }
+    },
+    {
+      "cycle": 2,
+      "scenario": {
+        "name": "Medium module",
+        "lines": 800,
+        "density": 0.08
+      },
+      "results": {
+        "all-opus": {
+          "strategy": "all-opus",
+          "model": "opus",
+          "scan_cost": 0.0,
+          "deep_dive_cost": 0.36,
+          "total_cost": 0.36,
+          "findings": 64,
+          "scan_findings": 0,
+          "deep_dive_confirmations": 64,
+          "false_positives": 0
+        },
+        "hierarchical": {
+          "strategy": "hierarchical",
+          "model": "sonnet",
+          "scan_cost": 0.06720000000000001,
+          "deep_dive_cost": 0.0,
+          "total_cost": 0.06720000000000001,
+          "findings": 64,
+          "scan_findings": 64,
+          "deep_dive_confirmations": 0,
+          "false_positives": 0
+        },
+        "hybrid": {
+          "strategy": "hybrid",
+          "model": "haiku+sonnet",
+          "scan_cost": 0.0015,
+          "deep_dive_cost": 0.033600000000000005,
+          "total_cost": 0.035100000000000006,
+          "findings": 64,
+          "scan_findings": 64,
+          "deep_dive_confirmations": 64,
+          "false_positives": 0
+        }
+      }
+    },
+    {
+      "cycle": 3,
+      "scenario": {
+        "name": "Large module",
+        "lines": 1500,
+        "density": 0.03
+      },
+      "results": {
+        "all-opus": {
+          "strategy": "all-opus",
+          "model": "opus",
+          "scan_cost": 0.0,
+          "deep_dive_cost": 0.6749999999999999,
+          "total_cost": 0.6749999999999999,
+          "findings": 45,
+          "scan_findings": 0,
+          "deep_dive_confirmations": 45,
+          "false_positives": 0
+        },
+        "hierarchical": {
+          "strategy": "hierarchical",
+          "model": "sonnet",
+          "scan_cost": 0.126,
+          "deep_dive_cost": 0.0,
+          "total_cost": 0.126,
+          "findings": 45,
+          "scan_findings": 45,
+          "deep_dive_confirmations": 0,
+          "false_positives": 0
+        },
+        "hybrid": {
+          "strategy": "hybrid",
+          "model": "haiku+sonnet",
+          "scan_cost": 0.0028125,
+          "deep_dive_cost": 0.063,
+          "total_cost": 0.0658125,
+          "findings": 45,
+          "scan_findings": 45,
+          "deep_dive_confirmations": 45,
+          "false_positives": 0
+        }
+      }
+    },
+    {
+      "cycle": 4,
+      "scenario": {
+        "name": "Clean codebase",
+        "lines": 2000,
+        "density": 0.01
+      },
+      "results": {
+        "all-opus": {
+          "strategy": "all-opus",
+          "model": "opus",
+          "scan_cost": 0.0,
+          "deep_dive_cost": 0.8999999999999999,
+          "total_cost": 0.8999999999999999,
+          "findings": 20,
+          "scan_findings": 0,
+          "deep_dive_confirmations": 20,
+          "false_positives": 0
+        },
+        "hierarchical": {
+          "strategy": "hierarchical",
+          "model": "sonnet",
+          "scan_cost": 0.16799999999999998,
+          "deep_dive_cost": 0.0,
+          "total_cost": 0.16799999999999998,
+          "findings": 20,
+          "scan_findings": 20,
+          "deep_dive_confirmations": 0,
+          "false_positives": 0
+        },
+        "hybrid": {
+          "strategy": "hybrid",
+          "model": "haiku+sonnet",
+          "scan_cost": 0.00375,
+          "deep_dive_cost": 0.08399999999999999,
+          "total_cost": 0.08775,
+          "findings": 20,
+          "scan_findings": 20,
+          "deep_dive_confirmations": 20,
+          "false_positives": 0
+        }
+      }
+    },
+    {
+      "cycle": 5,
+      "scenario": {
+        "name": "Messy legacy",
+        "lines": 1000,
+        "density": 0.15
+      },
+      "results": {
+        "all-opus": {
+          "strategy": "all-opus",
+          "model": "opus",
+          "scan_cost": 0.0,
+          "deep_dive_cost": 0.44999999999999996,
+          "total_cost": 0.44999999999999996,
+          "findings": 150,
+          "scan_findings": 0,
+          "deep_dive_confirmations": 150,
+          "false_positives": 0
+        },
+        "hierarchical": {
+          "strategy": "hierarchical",
+          "model": "sonnet",
+          "scan_cost": 0.08399999999999999,
+          "deep_dive_cost": 0.0,
+          "total_cost": 0.08399999999999999,
+          "findings": 150,
+          "scan_findings": 150,
+          "deep_dive_confirmations": 0,
+          "false_positives": 0
+        },
+        "hybrid": {
+          "strategy": "hybrid",
+          "model": "haiku+sonnet",
+          "scan_cost": 0.001875,
+          "deep_dive_cost": 0.041999999999999996,
+          "total_cost": 0.043875,
+          "findings": 150,
+          "scan_findings": 150,
+          "deep_dive_confirmations": 150,
+          "false_positives": 0
+        }
+      }
+    }
+  ],
+  "validation": {
+    "target": 26.0,
+    "achieved": 47.8,
+    "passed": true
+  }
+}
