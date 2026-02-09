@@ -530,6 +530,70 @@ Reference this file in:
 
 ---
 
+## Cost Monitoring
+
+### Monthly Cost Reports
+
+**Script:** `.claude/scripts/monthly-cost-report.py`
+
+Generate comprehensive monthly cost reports with:
+- Model routing distribution (actual vs expected)
+- Cost breakdown by model and agent type
+- Token consumption (input/output split)
+- Savings comparison vs all-Opus baseline
+- Alert triggers for threshold violations
+
+**Usage:**
+```bash
+# Generate report for current month
+python .claude/scripts/monthly-cost-report.py
+
+# Generate report for specific month
+python .claude/scripts/monthly-cost-report.py --month 2026-02
+
+# Use custom config
+python .claude/scripts/monthly-cost-report.py --config custom-config.json
+```
+
+**Output Location:** `.ignorar/production-reports/cost-tracking/YYYY-MM-cost-report.md`
+
+### Configuration
+
+**File:** `.claude/scripts/cost-tracking-config.json`
+
+Configure:
+- Model pricing tiers (Haiku/Sonnet/Opus)
+- Expected distribution targets
+- Log file paths
+- Alert thresholds (monthly cost, distribution limits)
+- Projection defaults (cycles per month)
+
+**Alert Thresholds:**
+- Monthly cost: $50 USD
+- Haiku usage: ≥30%
+- Opus usage: ≤20%
+- Cost per cycle: ≤$0.75
+
+### When to Run Reports
+
+- **Monthly:** First week of each month for previous month
+- **Ad-hoc:** After major workflow changes
+- **Quarterly:** Review trends and adjust thresholds
+
+### Interpreting Reports
+
+**Model Distribution:**
+- ✅ Green: Within 5% of expected
+- ⚠️ Yellow: 5-10% deviation from expected
+- ❌ Red: >10% deviation from expected
+
+**Action Items:**
+- High Opus usage → Review decision tree, look for Sonnet opportunities
+- Low Haiku usage → Identify simple tasks being over-routed
+- Alerts triggered → Investigate root cause before next cycle
+
+---
+
 ## References
 
 - **Master Remediation Plan:** `.ignorar/2026-02-08-claude-config-sota-audit-and-remediation-plan--delete-after-successful-implementation/team4-master-plan/MASTER-REMEDIATION-PLAN.md` (Lines 759-811)

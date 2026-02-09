@@ -140,14 +140,36 @@ These checks are automatically applied by `.claude/hooks/pre-git-commit.sh`:
 1. **Git commit command** is intercepted
 2. **Check pending directory:** `.build/checkpoints/pending/`
    - If pending files exist: **BLOCK** with message
-   - If no pending files: **ALLOW** (all verified)
+   - If no pending files: **ALLOW** (proceed to next check)
+3. **Check code-reviewer score:** Via `.claude/scripts/check-reviewer-score.sh`
+   - If score < 9.0/10: **BLOCK** with message
+   - If score >= 9.0/10: **ALLOW** (all verified)
+   - If no report found: **WARN** but allow (graceful degradation)
+   - If parsing fails: **WARN** but allow (graceful degradation)
 
-**Blocking Message Format:**
+**Blocking Message Format (Pending Files):**
 ```
 COMMIT BLOQUEADO: Hay {N} archivo(s) Python sin verificar por agentes.
 Archivos pendientes: {LIST}
 ACCION REQUERIDA: Ejecuta /verify para correr los agentes de verificacion, despues intenta commit de nuevo.
 ```
+
+**Blocking Message Format (Code Reviewer Score):**
+```
+COMMIT BLOQUEADO: Code reviewer score no cumple con threshold >= 9.0/10.
+
+[Score output from check-reviewer-score.sh]
+
+ACCION REQUERIDA: Corrige los problemas de calidad identificados y ejecuta /verify nuevamente.
+```
+
+**Helper Script:** `.claude/scripts/check-reviewer-score.sh`
+- Searches for most recent code-reviewer report in `.ignorar/production-reports/code-reviewer/`
+- Extracts score using multiple pattern matching strategies
+- Returns exit code 0 (PASS) if score >= 9.0/10
+- Returns exit code 1 (FAIL) if score < 9.0/10
+- Returns exit code 0 with WARNING if no report found (first-time setup)
+- Returns exit code 0 with WARNING if score parsing fails (graceful degradation)
 
 ---
 

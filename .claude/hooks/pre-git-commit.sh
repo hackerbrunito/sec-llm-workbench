@@ -93,6 +93,39 @@ EOF
     exit 0
 fi
 
+# Verificar code-reviewer score threshold (>= 9.0/10)
+SCORE_CHECK_SCRIPT="${CLAUDE_PROJECT_DIR:-.}/.claude/scripts/check-reviewer-score.sh"
+
+if [ -f "$SCORE_CHECK_SCRIPT" ]; then
+    # Ejecutar verificación de score y capturar output
+    SCORE_OUTPUT=$(bash "$SCORE_CHECK_SCRIPT" 2>&1)
+    SCORE_EXIT_CODE=$?
+
+    if [ $SCORE_EXIT_CODE -ne 0 ]; then
+        # Score check FAILED (< 9.0/10)
+        log_commit_decision "blocked" "code_reviewer_score_below_threshold"
+
+        cat <<EOF
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "deny",
+    "permissionDecisionReason": "COMMIT BLOQUEADO: Code reviewer score no cumple con threshold >= 9.0/10.\n\n${SCORE_OUTPUT}\n\nACCION REQUERIDA: Corrige los problemas de calidad identificados y ejecuta /verify nuevamente."
+  }
+}
+EOF
+        exit 0
+    else
+        # Score check PASSED or WARNING (graceful degradation)
+        # Si el output contiene WARNING, loggear pero permitir
+        if echo "$SCORE_OUTPUT" | grep -q "WARNING"; then
+            log_commit_decision "allowed" "code_reviewer_score_warning:first_time_or_parse_failed"
+        else
+            log_commit_decision "allowed" "code_reviewer_score_passed"
+        fi
+    fi
+fi
+
 # Loggear decisión de permitir
 log_commit_decision "allowed" "all_verified"
 
