@@ -1,6 +1,7 @@
+<!-- version: 2026-02 -->
 # Agent Report Persistence
 
-When invoking agents via Task tool, ALWAYS include in the prompt:
+When invoking agents via Task tool, include in the prompt:
 > "Save your report to `.ignorar/production-reports/{agent-name}/phase-{N}/{TIMESTAMP}-phase-{N}-{agent-name}-{slug}.md`"
 
 ## Naming Convention (UUID-based - prevents race conditions)

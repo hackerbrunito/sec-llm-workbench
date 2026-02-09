@@ -119,42 +119,14 @@ Entorno de desarrollo reproducible con VS Code.
 
 ---
 
-## 11. Modern Python Type Hints
+## 11-13. Python 2026 Standards
 
-**Reemplaza:** typing.List, typing.Dict, typing.Optional
+**→ See `.claude/docs/python-standards.md` for complete Python 2026 standards**
 
-```python
-# Moderno (Python 3.11+)
-list[str]
-dict[str, int]
-X | None
-```
-
----
-
-## 12. Pydantic v2
-
-**Reemplaza:** Pydantic v1 patterns
-
-```python
-# v2
-model_config = ConfigDict(strict=True)
-
-@field_validator("field")
-@classmethod
-def validate(cls, v): ...
-```
-
----
-
-## 13. Async HTTP (httpx)
-
-**Reemplaza:** requests (sync)
-
-```python
-async with httpx.AsyncClient() as client:
-    response = await client.get(url)
-```
+Quick summary:
+- Modern type hints: `list[str]`, `X | None` (not `List[str]`, `Optional[X]`)
+- Pydantic v2: `ConfigDict`, `@field_validator` (not `class Config`, `@validator`)
+- Async HTTP: `httpx.AsyncClient` (not `requests`)
 
 ---
 

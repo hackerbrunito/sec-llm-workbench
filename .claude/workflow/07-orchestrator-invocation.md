@@ -1,6 +1,8 @@
 <!-- version: 2026-02 -->
 # Protocolo de Invocación del Orquestador
 
+<!-- COMPACT-SAFE: One task per layer (domain→ports→usecases→adapters→infrastructure→tests). Context hygiene (/clear between phases). MCP fallback: Context7→WebSearch→project code (never assume syntax). -->
+
 Cómo el orquestador debe invocar a code-implementer y otros agentes.
 
 ---

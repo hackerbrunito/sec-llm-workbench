@@ -1,6 +1,8 @@
 <!-- version: 2026-02 -->
 # Decisiones Automáticas
 
+<!-- COMPACT-SAFE: code-implementer auto-fixes (Pydantic v2, httpx, structlog, pathlib). Model routing: Haiku (file ops), Sonnet (synthesis), Opus (architecture) -->
+
 El orquestador delega estas decisiones a code-implementer SIN preguntar:
 
 | Situación | Acción |
@@ -48,40 +50,4 @@ El orquestador delega estas decisiones a code-implementer SIN preguntar:
 
 ## Model Routing Rules
 
-**Quick Reference** (ver `.claude/rules/model-selection-strategy.md` para decision tree completo):
-
-| Tipo de Tarea | Modelo | Rationale |
-|---------------|--------|-----------|
-| **File ops** (read, glob, grep) | Haiku | Simple, no synthesis needed |
-| **Simple edits** (<100 cambios) | Haiku | Mechanical task |
-| **Simple write** (template-based) | Haiku | Clear spec, no synthesis |
-| **Bash commands** (ruff, mypy, pytest) | Haiku | Straightforward execution |
-| **Simple test script** (<50 líneas) | Haiku | Clear pattern |
-| **Config validation** (syntax) | Haiku | Mechanical check |
-| **Metrics collection** | Haiku | Straightforward measurement |
-| **Code synthesis** (50-300 líneas) | Sonnet | Multi-file reasoning |
-| **Complex test suite** (>50 líneas, edge cases) | Sonnet | Edge case coverage |
-| **Config analysis** (semantic) | Sonnet | Requires understanding |
-| **Verification agents** (todos) | Sonnet | Pattern recognition |
-| **Multi-file refactor** (2-5 archivos) | Sonnet | Coordinated changes |
-| **Gap analysis** (3-5 archivos) | Sonnet | Synthesis without full context |
-| **Documentation generation** | Sonnet | Synthesizing from code |
-| **Prompt engineering** | Sonnet | Multi-agent coordination |
-| **Design pattern implementation** | Sonnet | Pattern recognition |
-| **Multi-module feature** (2-5 módulos) | Sonnet | Cross-module dependencies |
-| **Arquitectura** (>5 módulos) | Opus | Full project context required |
-| **Parallel execution** (coordinación) | Opus | Complex multi-agent state |
-| **System-wide refactor** (>5 módulos) | Opus | Cascading dependencies |
-
-### Cost Targets
-- **Haiku:** 5-35× cheaper than Opus
-- **Sonnet:** 5× cheaper than Opus
-- **Opus:** Only ~10% of tasks
-- **Target:** <$0.50 per cycle (40-60% reduction vs. all-Opus)
-
-### Override Decision
-Orquestador puede override basado en:
-- Task complexity discovered during execution
-- Multi-file dependencies (upgrade Haiku → Sonnet)
-- Full project context needed (upgrade Sonnet → Opus)
-- Task more mechanical than expected (downgrade Sonnet → Haiku)
+**→ See `.claude/rules/model-selection-strategy.md` for complete model routing strategy**

@@ -22,91 +22,200 @@ This document defines schemas for 8 core tools used by verification agents.
 
 ### Bash Schema
 
-Used for: Running shell commands, git operations, test execution
+**Purpose:** Execute shell commands for linting, testing, git operations, and toolchain invocation. Supports timeouts and process control for long-running operations.
 
+**Use Cases:**
+- Run static analysis tools (ruff, mypy, bandit)
+- Execute test suites with coverage reporting
+- Perform git operations (status, diff, log)
+- Invoke build tools and package managers (uv, pip)
+- Measure code metrics (radon, complexity analysis)
+
+**Parameters:**
+
+| Parameter | Type | Required | Constraints | Notes |
+|-----------|------|----------|-------------|-------|
+| `command` | string | Yes | Non-empty, valid shell syntax | Full command with args |
+| `description` | string | No | Max 200 chars | Human-readable purpose |
+| `timeout_ms` | number | No | Range: 1000-600000 | Default: 120000 (2 min) |
+
+**Constraints:**
+- Commands execute in project root directory by default
+- Environment inherits from parent shell (PATH, virtualenv)
+- Max timeout: 10 minutes (600000ms) for heavy operations
+- Working directory persists between calls
+- Shell state (variables, aliases) does NOT persist
+
+**Examples:**
+
+1. **Ruff validation with custom config:**
 ```json
 {
   "tool": "bash",
-  "command": "string",
-  "description": "string (optional)",
-  "timeout_ms": "number (optional)"
+  "command": "uv run ruff check src/ --config pyproject.toml",
+  "description": "Verify Python formatting against project standards",
+  "timeout_ms": 30000
 }
 ```
+**Output:** List of violations with file paths and line numbers
+**Interpretation:** Exit code 0 = pass, non-zero = violations found
 
-**Example (best-practices-enforcer):**
+2. **Coverage report generation:**
 ```json
 {
   "tool": "bash",
-  "command": "ruff check src/",
-  "description": "Verify ruff formatting compliance"
+  "command": "pytest tests/ --cov=src --cov-report=json --cov-report=term",
+  "description": "Generate test coverage metrics",
+  "timeout_ms": 180000
 }
 ```
+**Output:** JSON coverage data + terminal summary
+**Interpretation:** Parse JSON for programmatic threshold checks (>80%)
 
-**Example (test-generator):**
+3. **Git diff for code review:**
 ```json
 {
   "tool": "bash",
-  "command": "pytest tests/ --cov=src --cov-report=term",
-  "description": "Generate coverage report"
+  "command": "git diff --unified=3 main...HEAD",
+  "description": "Show changes since branch diverged from main"
 }
 ```
+**Output:** Unified diff format with 3 lines context
+**Interpretation:** Review added/removed lines for semantic changes
+
+**Common Failure Modes:**
+
+| Error | Cause | Remediation |
+|-------|-------|-------------|
+| `TimeoutError` | Command exceeds timeout | Increase `timeout_ms` or optimize command |
+| `CommandNotFoundError` | Tool not in PATH | Install dependency with `uv add` |
+| `ExitCode != 0` | Validation failures | Parse stderr for specific violations |
+| `PermissionDenied` | Insufficient file permissions | Check file ownership and chmod |
+
+**Performance Notes:**
+- Long-running tests (>2 min): Increase timeout to 300000ms
+- Heavy I/O operations: Consider splitting into smaller batches
+- Git operations on large repos: Use `--no-pager` to prevent hanging
+- Parallel tool execution: Use `&` for background jobs cautiously (job control varies)
 
 ---
 
 ### Read Schema
 
-Used for: Reading file contents, inspecting code
+**Purpose:** Read file contents with optional line-range filtering for efficient large-file inspection. Supports text files, code, configuration, and documentation with automatic encoding detection.
 
-```json
-{
-  "tool": "read",
-  "file_path": "string (absolute path required)",
-  "offset": "number (optional, line number)",
-  "limit": "number (optional, max lines)"
-}
-```
+**Use Cases:**
+- Inspect source code for pattern analysis
+- Read configuration files for validation
+- Extract specific sections from large files using offset/limit
+- Verify file contents before modification
+- Load documentation for context
 
-**Example (code-reviewer):**
+**Parameters:**
+
+| Parameter | Type | Required | Constraints | Notes |
+|-----------|------|----------|-------------|-------|
+| `file_path` | string | Yes | Absolute path, file must exist | Relative paths rejected |
+| `offset` | number | No | Line number ≥1 | Starting line (1-indexed) |
+| `limit` | number | No | Lines to read, ≥1 | Max lines from offset |
+
+**Constraints:**
+- Absolute paths required (e.g., `/Users/bruno/project/file.py`)
+- Lines >2000 chars are truncated with `...` marker
+- Default behavior: Read entire file (no offset/limit)
+- Binary files return error (use for text files only)
+- Symlinks are followed automatically
+
+**Examples:**
+
+1. **Full file read for code review:**
 ```json
 {
   "tool": "read",
   "file_path": "/Users/bruno/sec-llm-workbench/src/api/client.py"
 }
 ```
+**Output:** Complete file with line numbers (cat -n format)
+**Interpretation:** Line 1 starts at `1\tContent...`, scan for patterns
 
-**Example (hallucination-detector):**
+2. **Paginated read for large files:**
 ```json
 {
   "tool": "read",
   "file_path": "/Users/bruno/sec-llm-workbench/src/models/user.py",
-  "offset": 1,
-  "limit": 50
+  "offset": 50,
+  "limit": 100
 }
 ```
+**Output:** Lines 50-149 with line numbers
+**Interpretation:** Isolate specific class/function without loading full file
+
+3. **Configuration validation:**
+```json
+{
+  "tool": "read",
+  "file_path": "/Users/bruno/sec-llm-workbench/pyproject.toml"
+}
+```
+**Output:** TOML configuration with line numbers
+**Interpretation:** Parse for dependency versions, tool settings
+
+**Common Failure Modes:**
+
+| Error | Cause | Remediation |
+|-------|-------|-------------|
+| `FileNotFoundError` | Path doesn't exist | Use Glob to find correct path |
+| `PermissionError` | No read access | Check file permissions (chmod) |
+| `IsADirectoryError` | Path points to directory | Use Glob to list directory contents |
+| `UnicodeDecodeError` | Binary file read attempt | Check file type before reading |
+| `InvalidOffset` | Offset exceeds file length | Read without offset first |
+
+**Performance Notes:**
+- Files >10K lines: Use offset/limit to paginate (avoids token waste)
+- Repeated reads: Cache in agent memory if needed multiple times
+- Large config files: Read once, parse in memory
+- Log files: Use `limit` to read recent entries (tail-like behavior)
 
 ---
 
 ### Glob Schema
 
-Used for: Finding files matching patterns
+**Purpose:** Fast file pattern matching using glob syntax for discovering files by name, extension, or directory structure. Returns sorted results by modification time (most recent first).
 
-```json
-{
-  "tool": "glob",
-  "pattern": "string",
-  "path": "string (optional, defaults to cwd)"
-}
-```
+**Use Cases:**
+- Find all Python files for verification (`**/*.py`)
+- Locate configuration files (`.env*`, `*.toml`)
+- Discover test files (`tests/**/test_*.py`)
+- Identify potential secrets (`**/.env`, `**/credentials.*`)
+- Build file lists for batch processing
 
-**Example (best-practices-enforcer):**
+**Parameters:**
+
+| Parameter | Type | Required | Constraints | Notes |
+|-----------|------|----------|-------------|-------|
+| `pattern` | string | Yes | Valid glob syntax | Supports `*`, `**`, `?`, `[]` |
+| `path` | string | No | Valid directory path | Default: current working directory |
+
+**Constraints:**
+- Pattern uses standard glob syntax: `*` (any chars), `**` (recursive), `?` (single char)
+- Results sorted by modification time (newest first)
+- Hidden files require explicit pattern (`.*/.*` or `**/.*`)
+- Symbolic links followed by default
+- Case-sensitive on Linux/macOS, case-insensitive on Windows
+
+**Examples:**
+
+1. **Find all Python source files:**
 ```json
 {
   "tool": "glob",
   "pattern": "src/**/*.py"
 }
 ```
+**Output:** List of absolute paths sorted by modification time
+**Interpretation:** Most recently modified files appear first
 
-**Example (security-auditor):**
+2. **Detect environment files (security):**
 ```json
 {
   "tool": "glob",
@@ -114,43 +223,118 @@ Used for: Finding files matching patterns
   "path": "/Users/bruno/sec-llm-workbench"
 }
 ```
+**Output:** Paths to `.env`, `.env.local`, `.env.example`, etc.
+**Interpretation:** Check if `.env` committed to git (security risk)
+
+3. **Locate test files for coverage analysis:**
+```json
+{
+  "tool": "glob",
+  "pattern": "tests/**/test_*.py"
+}
+```
+**Output:** All test files matching `test_*.py` pattern
+**Interpretation:** Compare against source files to identify coverage gaps
+
+**Common Failure Modes:**
+
+| Error | Cause | Remediation |
+|-------|-------|-------------|
+| `NoMatchesFound` | Pattern too specific | Broaden pattern (e.g., `**/*.py` vs `src/*.py`) |
+| `InvalidPattern` | Malformed glob syntax | Escape special chars, check brackets |
+| `PathNotFound` | Invalid directory path | Verify `path` parameter exists |
+| `TooManyResults` | Pattern too broad | Narrow with subdirectory or extension |
+
+**Performance Notes:**
+- Large repos (>10K files): Use specific patterns to avoid full tree scan
+- Recursive patterns (`**`): Can be slow on deep directories, limit scope
+- Hidden file search: More expensive than visible files
+- Pattern ordering: More specific patterns first (e.g., `src/**/*.py` vs `**/*.py`)
 
 ---
 
 ### Grep Schema
 
-Used for: Searching code patterns, finding vulnerabilities
+**Purpose:** Fast content search using ripgrep (rg) with regex support for finding patterns, vulnerabilities, and deprecated code across large codebases. Supports filtering by file type, output modes, and context lines.
 
+**Use Cases:**
+- Search for hardcoded secrets and credentials
+- Find deprecated API usage (e.g., `typing.List`)
+- Locate security vulnerabilities (SQL injection patterns)
+- Identify TODO/FIXME comments
+- Detect import statement patterns
+
+**Parameters:**
+
+| Parameter | Type | Required | Constraints | Notes |
+|-----------|------|----------|-------------|-------|
+| `pattern` | string | Yes | Valid regex (ripgrep syntax) | Literal braces need escaping |
+| `path` | string | No | Valid directory/file path | Default: current directory |
+| `type` | string | No | File type (py, js, json, etc.) | More efficient than glob filter |
+| `output_mode` | string | No | content/files_with_matches/count | Default: files_with_matches |
+
+**Constraints:**
+- Uses ripgrep syntax (NOT standard grep): braces require escaping `\{`
+- `output_mode=content` shows matching lines with context (use `-A`, `-B`, `-C`)
+- `output_mode=files_with_matches` shows only file paths (faster for counting)
+- `output_mode=count` shows match counts per file
+- Case-sensitive by default (use `-i` parameter for case-insensitive)
+- Multiline patterns require `multiline: true` parameter
+
+**Examples:**
+
+1. **Security: Find hardcoded secrets:**
 ```json
 {
   "tool": "grep",
-  "pattern": "string",
-  "path": "string (optional)",
-  "type": "string (optional, e.g., 'py', 'json')",
-  "output_mode": "string (optional, 'content'|'files_with_matches'|'count')"
-}
-```
-
-**Example (security-auditor):**
-```json
-{
-  "tool": "grep",
-  "pattern": "hardcoded|password|secret|api_key",
+  "pattern": "hardcoded|password|secret|api_key|token",
   "path": "/Users/bruno/sec-llm-workbench/src",
   "type": "py",
   "output_mode": "content"
 }
 ```
+**Output:** File paths + line numbers + matched lines
+**Interpretation:** Any match is HIGH severity security risk (CWE-798)
 
-**Example (hallucination-detector):**
+2. **Best practices: Find legacy type hints:**
 ```json
 {
   "tool": "grep",
-  "pattern": "from typing import.*List|Dict|Optional",
+  "pattern": "from typing import.*(List|Dict|Optional|Union)",
   "type": "py",
   "output_mode": "files_with_matches"
 }
 ```
+**Output:** File paths containing legacy typing imports
+**Interpretation:** Files need migration to modern syntax (`list[str]` not `List[str]`)
+
+3. **Code review: Find SQL injection patterns:**
+```json
+{
+  "tool": "grep",
+  "pattern": "execute\\(.*f\"|SELECT.*\\{",
+  "path": "/Users/bruno/sec-llm-workbench/src",
+  "type": "py",
+  "output_mode": "content"
+}
+```
+**Output:** Lines with potential SQL injection (f-strings in queries)
+**Interpretation:** CRITICAL vulnerability (CWE-89), requires parameterized queries
+
+**Common Failure Modes:**
+
+| Error | Cause | Remediation |
+|-------|-------|-------------|
+| `InvalidRegex` | Malformed regex pattern | Escape special chars: `\.`, `\{`, `\(` |
+| `NoMatches` | Pattern too specific | Broaden pattern or check file type filter |
+| `TooManyMatches` | Pattern too broad | Add context (path or type filter) |
+| `TimeoutError` | Large repo + complex regex | Simplify regex or narrow path scope |
+
+**Performance Notes:**
+- Large repos (>50K files): Use `type` filter to reduce search space
+- Complex regex: Test with `output_mode=count` first to estimate matches
+- Context lines (`-A`, `-B`, `-C`): Only use with `output_mode=content`
+- Case-insensitive search (`-i`): Slower than case-sensitive, use sparingly
 
 ---
 
@@ -158,17 +342,32 @@ Used for: Searching code patterns, finding vulnerabilities
 
 ### context7_resolve_library_id Schema
 
-Used for: Resolving library names to Context7 IDs
+**Purpose:** Resolve human-readable library names to Context7-compatible library IDs for documentation queries. Returns the most relevant match based on name similarity, description relevance, and documentation coverage.
 
-```json
-{
-  "tool": "context7_resolve_library_id",
-  "libraryName": "string",
-  "query": "string"
-}
-```
+**Use Cases:**
+- Convert library names to Context7 IDs before querying docs
+- Discover available library versions in Context7
+- Validate library exists in documentation corpus
+- Find alternative library names (e.g., "requests" vs "httpx")
+- Check documentation quality (code snippet count, benchmark score)
 
-**Example:**
+**Parameters:**
+
+| Parameter | Type | Required | Constraints | Notes |
+|-----------|------|----------|-------------|-------|
+| `libraryName` | string | Yes | Library/package name | Case-insensitive, partial match OK |
+| `query` | string | Yes | User's original question | Used for relevance ranking |
+
+**Constraints:**
+- Do NOT call more than 3 times per question (quota limit)
+- Returns single best match (not exhaustive list)
+- Prioritizes: exact name match > description relevance > snippet count
+- May fail if library not in Context7 corpus (fallback to memory)
+- Monthly quota limits apply (check for 429 errors)
+
+**Examples:**
+
+1. **Resolve httpx for async client verification:**
 ```json
 {
   "tool": "context7_resolve_library_id",
@@ -176,31 +375,123 @@ Used for: Resolving library names to Context7 IDs
   "query": "async client timeout configuration"
 }
 ```
+**Output:** `{"library_id": "/encode/httpx", "version": "0.24.1", "benchmark_score": 95}`
+**Interpretation:** Use `/encode/httpx` for subsequent `query_docs` calls
 
-**Response:** `{"library_id": "/httpx/httpx", "version": "0.24.1"}`
+2. **Resolve Pydantic for validation checking:**
+```json
+{
+  "tool": "context7_resolve_library_id",
+  "libraryName": "pydantic",
+  "query": "Pydantic v2 ConfigDict and field_validator usage"
+}
+```
+**Output:** `{"library_id": "/pydantic/pydantic", "version": "2.5.0", "benchmark_score": 98}`
+**Interpretation:** High benchmark score = comprehensive docs available
+
+3. **Resolve with partial name match:**
+```json
+{
+  "tool": "context7_resolve_library_id",
+  "libraryName": "struct",
+  "query": "structured logging with context"
+}
+```
+**Output:** `{"library_id": "/hynek/structlog", "version": "23.2.0", "benchmark_score": 88}`
+**Interpretation:** Context7 matched "struct" to "structlog"
+
+**Common Failure Modes:**
+
+| Error | Cause | Remediation |
+|-------|-------|-------------|
+| `QuotaExceeded` | Monthly API limit reached | Use fallback to agent memory |
+| `NoMatchFound` | Library not in Context7 | Use training data, mark as "unverified" |
+| `AmbiguousMatch` | Multiple libraries match | Refine `query` with more context |
+| `TimeoutError` | Server latency >10s | Retry once, then fallback |
+
+**Performance Notes:**
+- Typical latency: 200-500ms (fast)
+- Cache results in agent memory for repeated queries
+- Batch library lookups at start of verification cycle
+- Use `query` field strategically (better relevance = better match)
 
 ---
 
 ### context7_query_docs Schema
 
-Used for: Querying library documentation
+**Purpose:** Query library documentation with specific questions to retrieve verified syntax, examples, and best practices. Returns code snippets, API signatures, and usage patterns directly from official documentation.
 
+**Use Cases:**
+- Verify correct function/method signatures
+- Retrieve code examples for specific functionality
+- Check parameter types and constraints
+- Validate deprecated vs current API usage
+- Discover recommended patterns and anti-patterns
+
+**Parameters:**
+
+| Parameter | Type | Required | Constraints | Notes |
+|-----------|------|----------|-------------|-------|
+| `libraryId` | string | Yes | Context7 format: `/org/project` | From `resolve_library_id` |
+| `query` | string | Yes | Specific question, 10-100 words | Better specificity = better results |
+
+**Constraints:**
+- Do NOT call more than 3 times per question (quota limit)
+- Requires valid `libraryId` from `resolve_library_id` first
+- Do NOT include sensitive data (API keys, credentials) in query
+- Query specificity critical: "How to X?" > "Tell me about X"
+- Returns semantic search results (not exact text match)
+
+**Examples:**
+
+1. **Verify httpx AsyncClient timeout syntax:**
 ```json
 {
   "tool": "context7_query_docs",
-  "libraryId": "string",
-  "query": "string"
+  "libraryId": "/encode/httpx",
+  "query": "How to set timeout parameter in AsyncClient constructor?"
 }
 ```
+**Output:** Code snippet + explanation showing `httpx.AsyncClient(timeout=30.0)` or `httpx.Timeout(connect=5.0, read=30.0)`
+**Interpretation:** Compare against codebase usage, flag mismatches as hallucinations
 
-**Example:**
+2. **Check Pydantic v2 validator syntax:**
 ```json
 {
   "tool": "context7_query_docs",
-  "libraryId": "/httpx/httpx",
-  "query": "How to set timeout parameter in AsyncClient?"
+  "libraryId": "/pydantic/pydantic",
+  "query": "What is the correct decorator for field validation in Pydantic v2?"
 }
 ```
+**Output:** Example showing `@field_validator('field_name')` with `@classmethod` decorator
+**Interpretation:** Detect legacy `@validator` usage in codebase (v1 pattern)
+
+3. **Discover structlog best practices:**
+```json
+{
+  "tool": "context7_query_docs",
+  "libraryId": "/hynek/structlog",
+  "query": "Recommended way to configure structlog for production JSON logging"
+}
+```
+**Output:** Configuration example with processors, formatters, and context binding
+**Interpretation:** Compare project setup against recommended patterns
+
+**Common Failure Modes:**
+
+| Error | Cause | Remediation |
+|-------|-------|-------------|
+| `InvalidLibraryId` | Malformed ID or not resolved | Call `resolve_library_id` first |
+| `QuotaExceeded` | Monthly limit reached | Use fallback to training data |
+| `VagueQuery` | Query too broad ("tell me about X") | Rephrase with specific question |
+| `TimeoutError` | Server latency >10s | Retry once, then fallback |
+| `NoResults` | Query doesn't match documentation | Rephrase or try related terms |
+
+**Performance Notes:**
+- Typical latency: 400-1000ms (moderate)
+- Cache results for repeated queries in same verification cycle
+- Prioritize queries for unfamiliar libraries (known libs = use memory)
+- Batch related queries (e.g., all httpx questions together)
 
 ---
 
@@ -658,7 +949,7 @@ For detailed theoretical validation, decision tree alignment, and continuous mon
 
 ### Schema Validation
 
-All schemas MUST pass JSON validation before use:
+All schemas should pass JSON validation before use:
 
 ```python
 import json

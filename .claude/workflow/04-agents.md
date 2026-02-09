@@ -36,15 +36,11 @@
 
 ## Model Selection
 
-**All agents use hierarchical model routing** based on task complexity. See `.claude/rules/model-selection-strategy.md` for the complete decision tree.
+**→ See `.claude/rules/model-selection-strategy.md` for model selection decision tree**
 
-**Default models:**
-- **code-implementer:** Sonnet (50-300 lines), Opus (>5 modules, architectural)
-- **All 5 verification agents:** Sonnet (pattern recognition, no full project context needed)
-
-**Override guidelines:**
-- Upgrade to Opus: >10 file dependencies, architectural decisions, complex multi-agent coordination
-- Downgrade to Haiku: Simple file operations, mechanical tasks, clear templates
+**Quick Reference:**
+- **code-implementer:** Sonnet (default), Opus (>5 modules, architectural)
+- **All 5 verification agents:** Sonnet (pattern recognition)
 
 ## Cómo invocar
 
@@ -124,12 +120,12 @@ Save your report to `.ignorar/production-reports/test-generator/phase-{N}/{TIMES
 
 #### Idle State Management
 
-**IMPORTANT:** Teammates go idle after every turn - this is normal behavior.
+**Note:** Teammates go idle after every turn - this is normal behavior.
 
 - Idle notifications are automatic (system-generated)
-- Idle does NOT mean "done" or "unavailable"
+- Idle doesn't mean "done" or "unavailable"
 - Idle agents can still receive messages and wake up
-- Do NOT comment on idleness unless it blocks your work
+- Only comment on idleness if it blocks your work
 
 **Normal flow:**
 ```
@@ -147,6 +143,166 @@ Todos los agentes deben generar reportes técnicos detallados (~500+ líneas, fl
 - Delegar corrección a code-implementer
 - Documentar en errors-to-rules.md si es error nuevo
 - Volver a verificar con los 5 agentes
+
+## Hybrid Model Strategy (Phase 4)
+
+**Cost reduction: -26% vs single-model baseline**
+
+### Concepto
+
+Verificación en 2 fases para optimizar costo sin pérdida de calidad:
+- **Fase 1 (Cheap Scan):** Haiku/Sonnet hace escaneo amplio, detecta patrones sospechosos
+- **Fase 2 (Deep Dive):** Opus analiza SOLO secciones marcadas en profundidad
+
+### Patrones de Uso
+
+#### Pattern 1: code-implementer (Haiku draft → Opus refinement)
+```python
+# Fase 1: Haiku genera estructura básica (~50 líneas)
+Task(
+    subagent_type="code-implementer",
+    model="haiku",
+    prompt="""Genera estructura básica de módulo de autenticación:
+- Clases principales con métodos stub
+- Type hints
+- Docstrings básicos
+NO implementes lógica compleja todavía."""
+)
+
+# Fase 2: Opus refina SOLO lógica compleja
+Task(
+    subagent_type="code-implementer",
+    model="opus",
+    prompt="""Refina SOLO estos métodos del draft de Haiku:
+- authenticate(): Implementa lógica JWT + refresh tokens
+- validate_permissions(): Implementa RBAC lookup
+Contexto: {haiku_draft}"""
+)
+```
+
+**Cuándo usar:**
+- Módulos >300 líneas con 20-30% lógica compleja
+- 70-80% es boilerplate (clases, imports, type hints)
+- Lógica compleja concentrada en 2-3 funciones
+
+**Ahorro esperado:** 40-50% vs Opus completo
+
+#### Pattern 2: Verification Agents (Sonnet scan → Opus deep dive)
+```python
+# Fase 1: Sonnet escanea todo el código con heurísticas rápidas
+scan_result = await run_cheap_scan(
+    agent="security-auditor",
+    model="sonnet",
+    files=pending_files,
+)
+# Resultado: Lista de secciones sospechosas con líneas específicas
+
+# Fase 2: Opus analiza SOLO secciones marcadas
+for flagged_section in scan_result.flagged_sections:
+    deep_dive_result = await run_deep_dive(
+        agent="security-auditor",
+        model="opus",
+        section=flagged_section,  # Solo 10-30 líneas de contexto
+    )
+```
+
+**Cuándo usar:**
+- Codebase grande (>1000 líneas) con pocos problemas reales
+- Cheap scan marca 5-10% del código para deep dive
+- 90-95% del código es limpio (no necesita análisis profundo)
+
+**Ahorro esperado:** 50-60% vs Opus full scan
+
+### Script de Orquestación
+
+**⚠️ EXPERIMENTAL:** Este script es parte de investigación Phase 4 (no integrado en producción)
+
+**Ubicación:** `.ignorar/experimental-scripts/phase4-hybrid-verification/hybrid-verification.py`
+
+**Uso:**
+```bash
+# Ejecutar verificación híbrida en archivos pendientes
+python .ignorar/experimental-scripts/phase4-hybrid-verification/hybrid-verification.py
+
+# Ver logs
+cat .build/logs/hybrid-verification/$(date +%Y-%m-%d).jsonl | jq
+```
+
+**Output:**
+```json
+{
+  "status": "SUCCESS",
+  "total_cost_usd": 0.35,
+  "scan_cost_usd": 0.08,
+  "deep_dive_cost_usd": 0.27,
+  "cost_comparison": {
+    "baseline_all_opus": 0.75,
+    "hierarchical_routing": 0.47,
+    "hybrid": 0.35,
+    "savings_vs_baseline_pct": 53.3,
+    "savings_vs_hierarchical_pct": 25.5
+  }
+}
+```
+
+### Heurísticas de Cheap Scan
+
+El cheap scan marca secciones basado en:
+
+| Heurística | Threshold | Severidad | Ejemplo |
+|-----------|-----------|-----------|---------|
+| Cyclomatic complexity | >10 | HIGH | Funciones con >10 ramas |
+| Function length | >30 lines | MEDIUM | Métodos muy largos |
+| SQL patterns + f-strings | Any match | CRITICAL | `f"SELECT * FROM {table}"` |
+| Hardcoded secrets | Keywords + `=` + `"` | HIGH | `api_key = "sk-xxx"` |
+| Legacy type hints | `List[`, `Dict[` | MEDIUM | `from typing import List` |
+| `print()` statements | Any | LOW | `print("debug")` |
+
+### Thresholds de Deep Dive
+
+Solo invocar Opus si:
+- **CRITICAL findings:** Siempre (SQL injection, secrets)
+- **HIGH findings:** Si >2 en mismo archivo
+- **MEDIUM findings:** Si >5 en mismo módulo
+- **LOW findings:** NO (arreglar sin deep dive)
+
+### Cost Breakdown Example
+
+**Archivo típico: 300 líneas Python**
+
+| Fase | Model | Tokens | Cost | % of Opus |
+|------|-------|--------|------|-----------|
+| Cheap scan (full file) | Sonnet | 20K input + 2K output | $0.09 | 12% |
+| Deep dive (3 sections × 30 lines) | Opus | 3 × (2K input + 1K output) | $0.68 | 91% |
+| **Total hybrid** | Mixed | 26K | **$0.77** | **103%** |
+| Opus full scan | Opus | 20K input + 5K output | $0.75 | 100% |
+
+**Nota:** Hybrid NO ahorra si cheap scan marca >40% del código. En ese caso, usar Opus directo.
+
+### Decision Tree: ¿Cuándo usar Hybrid?
+
+```
+¿Archivo >500 líneas?
+├─ NO → Usar Sonnet single-model (no overhead de 2 fases)
+└─ SÍ → ¿Esperamos >5 problemas reales?
+    ├─ SÍ → Usar Opus single-model (cheap scan marcará >40%)
+    └─ NO → Usar HYBRID (cheap scan marca <20%, gran ahorro)
+```
+
+### Integration con /verify
+
+El skill `/verify` puede invocar hybrid mode:
+
+```bash
+# Default: hierarchical routing (Sonnet para todo)
+/verify
+
+# Hybrid mode: Sonnet scan → Opus deep dive
+/verify --hybrid
+
+# Force Opus: Análisis completo (legacy behavior)
+/verify --opus
+```
 
 ## Agent Teams (Opus 4.6)
 

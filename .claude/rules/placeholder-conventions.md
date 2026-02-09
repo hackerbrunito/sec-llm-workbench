@@ -1,3 +1,4 @@
+<!-- version: 2026-02 -->
 # Placeholder Conventions
 
 - `.template` files: `{{ lowercase_snake_case }}` (Cookiecutter standard)

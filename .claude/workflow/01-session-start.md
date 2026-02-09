@@ -1,6 +1,8 @@
 <!-- version: 2026-02 -->
 # Session Start
 
+<!-- COMPACT-SAFE: Session triggers (continua/crea/default), state detection (NO_EXISTE/NECESITA_SETUP/EN_PROGRESO/COMPLETADO) -->
+
 ## Triggers de Inicio
 
 ### "Continúa con [PROYECTO]"

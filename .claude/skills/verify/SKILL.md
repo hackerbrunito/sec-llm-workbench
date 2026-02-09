@@ -15,9 +15,26 @@ Ejecuta agentes de verificacion y limpia markers de archivos pendientes.
 ## Uso
 
 ```
-/verify
-/verify --fix
+/verify                    # Synchronous verification (immediate)
+/verify --fix              # Auto-fix issues
+/verify --batch            # Batch API mode (50% cost savings, 24h latency)
+/verify --batch --wave 1   # Submit Wave 1 only
+/verify --batch --wave 2   # Submit Wave 2 only
 ```
+
+### Batch Mode (50% Cost Savings) - ⚠️ EXPERIMENTAL
+
+Uses Anthropic Batch API for non-interactive verification:
+- **Cost:** 50% discount vs. synchronous API
+- **Latency:** Up to 24 hours (most batches < 1 hour)
+- **Ideal for:** Non-urgent verification, large codebases
+- **Status:** Experimental feature, not integrated in production workflow
+- **Script:** `.ignorar/experimental-scripts/batch-api-verification/submit-batch-verification.py`
+
+**Workflow:**
+1. Submit batch: `python .ignorar/experimental-scripts/batch-api-verification/submit-batch-verification.py submit --wave 1`
+2. Poll status: `python .ignorar/experimental-scripts/batch-api-verification/submit-batch-verification.py poll BATCH_ID`
+3. Download results: `python .ignorar/experimental-scripts/batch-api-verification/submit-batch-verification.py results BATCH_ID`
 
 ## Current State
 - Pending files: !`ls .build/checkpoints/pending/ 2>/dev/null || echo "none"`

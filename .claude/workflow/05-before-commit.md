@@ -1,6 +1,8 @@
 <!-- version: 2026-02 -->
 # Before Commit
 
+<!-- COMPACT-SAFE: 5 agents via /verify, thresholds in verification-thresholds.md, pre-commit hook blocks unverified .py files -->
+
 ## Checklist Obligatorio
 
 1. ✅ Ejecutar /verify (5 agentes)
@@ -22,14 +24,6 @@ Limpia markers en `.build/checkpoints/pending/`
 ## Verification Thresholds
 
 **→ See `.claude/rules/verification-thresholds.md` for complete threshold definitions**
-
-| Check | PASS | FAIL |
-|-------|------|------|
-| code-reviewer score | >= 9.0/10 | < 9.0/10 |
-| ruff check errors | 0 errors | Any errors |
-| ruff check warnings | 0 warnings | Any warnings |
-| mypy errors | 0 errors | Any errors |
-| pytest | All pass | Any fail |
 | best-practices-enforcer | 0 violations | Any violation |
 | security-auditor | 0 CRITICAL/HIGH | Any CRITICAL/HIGH (MEDIUM = warning) |
 | hallucination-detector | 0 hallucinations | Any hallucination |
@@ -40,7 +34,7 @@ BLOQUEA commit si hay archivos .py sin verificar.
 
 ## Si verificación falla
 
-1. NO hacer commit
+1. Evita hacer commit
 2. Corregir errores
 3. Ejecutar /verify de nuevo
-4. Solo entonces commit
+4. Luego commit
