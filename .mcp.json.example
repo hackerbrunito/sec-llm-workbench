@@ -5,7 +5,7 @@
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp@latest"],
       "env": {
-        "UPSTASH_API_KEY": "${UPSTASH_API_KEY}"
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
       }
     }
   }

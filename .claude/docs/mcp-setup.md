@@ -23,26 +23,26 @@ This project uses Claude's MCP servers to access external tools and services. Cu
 cp .mcp.json.example .mcp.json
 ```
 
-### 2. Set UPSTASH_API_KEY environment variable
+### 2. Set CONTEXT7_API_KEY environment variable
 
-The Context7 MCP server requires an Upstash API key. Set it in your shell:
+The Context7 MCP server requires a Context7 API key. Set it in your shell:
 
 ```bash
-export UPSTASH_API_KEY="your-api-key-here"
+export CONTEXT7_API_KEY="your-api-key-here"
 ```
 
 Or add it to your `.env` file (this file is in .gitignore):
 
 ```bash
 # .env (not in git)
-UPSTASH_API_KEY=your-api-key-here
+CONTEXT7_API_KEY=your-api-key-here
 ```
 
-#### Getting an Upstash API Key
+#### Getting a Context7 API Key
 
-1. Visit [Upstash Console](https://console.upstash.com)
-2. Create a new Redis database or use existing
-3. Get your API key from the dashboard
+1. Visit [Context7](https://context7.com)
+2. Sign up and generate an API key
+3. Add it to your `.env` file
 4. Never commit this to git - keep it in `.env` only
 
 ### 3. Verify MCP is working
@@ -79,7 +79,7 @@ The `.mcp.json` file structure:
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp@latest"],
       "env": {
-        "UPSTASH_API_KEY": "${UPSTASH_API_KEY}"
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
       }
     }
   }
@@ -97,11 +97,11 @@ The `.mcp.json` file structure:
 
 ## Troubleshooting
 
-### Error: "UPSTASH_API_KEY not found"
+### Error: "CONTEXT7_API_KEY not found"
 
 **Solution:** Make sure you've set the environment variable before running Claude Code:
 ```bash
-export UPSTASH_API_KEY="your-key"
+export CONTEXT7_API_KEY="your-key"
 ```
 
 ### Error: "Context7 server failed to start"

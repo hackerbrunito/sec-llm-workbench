@@ -53,7 +53,7 @@ cd ~/<your-directory>
 
 # 2. Configurar variables de entorno
 cp .env.example .env
-# Editar .env y añadir UPSTASH_API_KEY
+# Editar .env y añadir CONTEXT7_API_KEY
 ```
 
 > **Nota:** El directorio puede tener cualquier nombre. El framework es agnóstico al nombre del directorio.
@@ -260,7 +260,7 @@ cd ~/<your-directory>
 
 # 2. Configure environment variables
 cp .env.example .env
-# Edit .env and add UPSTASH_API_KEY
+# Edit .env and add CONTEXT7_API_KEY
 ```
 
 > **Note:** The directory can have any name. The framework is directory-name agnostic.

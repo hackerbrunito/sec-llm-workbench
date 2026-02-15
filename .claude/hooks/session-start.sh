@@ -71,10 +71,10 @@ if [ -f "$PROJECT_DIR/.env" ]; then
     set -o allexport
 fi
 
-# Check for UPSTASH_API_KEY if Context7 is referenced
+# Check for CONTEXT7_API_KEY if Context7 is referenced
 if grep -r "Context7\|context7" "$PROJECT_DIR/.claude/agents" &>/dev/null 2>&1; then
-    if [ -z "${UPSTASH_API_KEY:-}" ]; then
-        echo "WARNING: UPSTASH_API_KEY not set. Context7 features will be unavailable."
+    if [ -z "${CONTEXT7_API_KEY:-}" ]; then
+        echo "WARNING: CONTEXT7_API_KEY not set. Context7 features will be unavailable."
         echo "See .env.example for setup instructions."
     fi
 fi

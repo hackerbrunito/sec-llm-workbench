@@ -328,7 +328,7 @@ If an MCP server (e.g., Context7) is unreachable:
 
 | Issue | Symptom | Fix |
 |-------|---------|-----|
-| Context7 timeout | `resolve-library-id` hangs | Check `UPSTASH_API_KEY` in `.env`, run `/mcp` |
+| Context7 timeout | `resolve-library-id` hangs | Check `CONTEXT7_API_KEY` in `.env`, run `/mcp` |
 | npx not found | SessionStart health check warning | Install Node.js, ensure npx is in PATH |
 | Config mismatch | Tools not available | Verify `.claude/mcp.json` format matches Claude Code version |
 
