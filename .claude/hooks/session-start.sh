@@ -12,50 +12,6 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 SESSION_ID="${CLAUDE_SESSION_ID:-local-$(date +%Y%m%d-%H%M%S)}"
 
 # =============================================================================
-# DEPENDENCY CHECKS - Verify required tools
-# =============================================================================
-
-check_command() {
-    local cmd="$1"
-    local description="$2"
-
-    if ! command -v "$cmd" &> /dev/null; then
-        echo "ERROR: Required command '$cmd' not found: $description"
-        echo ""
-        case "$cmd" in
-            uv)
-                echo "Install uv (Python package manager):"
-                echo "  macOS: brew install uv"
-                echo "  Linux: curl -LsSf https://astral.sh/uv/install.sh | sh"
-                ;;
-            ruff)
-                echo "Install ruff (Python linter):"
-                echo "  macOS: brew install ruff"
-                echo "  Linux: pip install ruff"
-                ;;
-            mypy)
-                echo "Install mypy (Python type checker):"
-                echo "  macOS: brew install mypy"
-                echo "  Linux: pip install mypy"
-                ;;
-            pytest)
-                echo "Install pytest (Python test framework):"
-                echo "  macOS: brew install pytest"
-                echo "  Linux: pip install pytest"
-                ;;
-        esac
-        echo ""
-        exit 1
-    fi
-}
-
-# Check for required dependencies
-check_command "uv" "Python package manager (uv)"
-check_command "ruff" "Python linter and formatter (ruff)"
-check_command "mypy" "Python static type checker (mypy)"
-check_command "pytest" "Python test framework (pytest)"
-
-# =============================================================================
 # ENVIRONMENT VALIDATION - Check for required API keys
 # =============================================================================
 
