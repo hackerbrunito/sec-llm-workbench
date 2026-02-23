@@ -44,6 +44,14 @@
 
 ## Cómo invocar
 
+### Required: Target Project Path
+
+When invoking ANY agent, ALWAYS include the target project path in the prompt:
+
+> "Target project: `~/siopv/` (or the active project path from `.build/active-project`). All file and git operations must use this directory."
+
+This prevents agents from accidentally operating on the meta-project (`sec-llm-workbench/`).
+
 ### Implementación (Sequential)
 ```
 # Default: Sonnet for typical module implementation

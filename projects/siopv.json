@@ -341,32 +341,32 @@
     {
       "number": 6,
       "name": "Privacidad (DLP)",
-      "status": "pending",
+      "status": "completed",
       "components": [
         {
           "name": "Presidio analyzer setup",
-          "status": "pending",
-          "notes": "Detect PII/secrets"
+          "status": "completed",
+          "notes": "PresidioAdapter: rule-based PII detection and anonymization"
         },
         {
           "name": "Presidio anonymizer setup",
-          "status": "pending",
-          "notes": "Redact sensitive data"
+          "status": "completed",
+          "notes": "Anonymizer integrated in PresidioAdapter"
         },
         {
           "name": "Claude Haiku semantic validator",
-          "status": "pending",
-          "notes": "Contextual sanitization"
+          "status": "completed",
+          "notes": "HaikuSemanticValidatorAdapter: LLM-based second-pass (fail-open)"
         },
         {
           "name": "DLP guardrail node",
-          "status": "pending",
-          "notes": "Dual-layer sanitization"
+          "status": "completed",
+          "notes": "DualLayerDLPAdapter: Presidio → Haiku two-layer pipeline + dlp_node in LangGraph"
         },
         {
           "name": "Unit tests",
-          "status": "pending",
-          "notes": "Test detection + redaction"
+          "status": "completed",
+          "notes": "71 tests, 91–100% coverage per module"
         }
       ]
     },
@@ -435,11 +435,11 @@
       ]
     }
   ],
-  "currentPhase": 6,
-  "currentStatus": "Phase 6 (DLP - Presidio) pendiente. Phase 5 (OpenFGA Authorization) completado.",
+  "currentPhase": 7,
+  "currentStatus": "Phase 7 (Human-in-the-Loop - Streamlit) pendiente. Phase 6 (DLP - Presidio + Haiku) completado.",
   "metrics": {
-    "totalTests": 714,
-    "coverage": "76%",
+    "totalTests": 1291,
+    "coverage": "82%",
     "packagesResolved": 214
   },
   "commands": {

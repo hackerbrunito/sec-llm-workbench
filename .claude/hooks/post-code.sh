@@ -83,7 +83,12 @@ fi
 # =============================================================================
 # Marcar que este archivo necesita verificación por agentes antes de commit
 
-VERIFICATION_DIR="${CLAUDE_PROJECT_DIR:-.}/.build/checkpoints/pending"
+# Store markers in the TARGET project's .build/, not the meta-project's
+if [ -f "$PROJECT_DIR/pyproject.toml" ]; then
+    VERIFICATION_DIR="$PROJECT_DIR/.build/checkpoints/pending"
+else
+    VERIFICATION_DIR="${CLAUDE_PROJECT_DIR:-.}/.build/checkpoints/pending"
+fi
 mkdir -p "$VERIFICATION_DIR"
 
 # Crear marker con hash del archivo para tracking

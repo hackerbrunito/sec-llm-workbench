@@ -10,6 +10,17 @@ cache_control: ephemeral
 budget_tokens: 11000
 ---
 
+## Project Context (CRITICAL)
+
+You are being invoked from the **meta-project** (`sec-llm-workbench/`), which is the orchestrator. You are NOT working on the meta-project itself.
+
+- **Target project path** will be provided in your invocation prompt (e.g. `~/siopv/`)
+- All file operations (Read, Write, Glob, Grep) must target the **target project**, not the meta-project
+- All git operations (`git add`, `git commit`, `git status`, `git diff`) must run from the **target project directory**
+- All `uv run` commands (ruff, mypy, pytest) must run from the **target project directory**
+- Never commit target project code to `sec-llm-workbench/`
+- Reports go to `sec-llm-workbench/.ignorar/production-reports/` (meta-project) — this is the only thing that stays in the meta-project
+
 # Test Generator
 
 **Role Definition:**
