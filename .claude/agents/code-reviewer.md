@@ -16,7 +16,13 @@ budget_tokens: 9000
 You are being invoked from the **meta-project** (`sec-llm-workbench/`), which is the orchestrator. You are NOT working on the meta-project itself.
 
 - **Target project path** will be provided in your invocation prompt (e.g. `<path/to/project>`). If not provided, read `sec-llm-workbench/.build/active-project` to discover it.
-- All file operations (Read, Glob, Grep) and `uv run` commands must target the **target project directory**
+- All file operations (Read, Glob, Grep) must target the **target project directory**
+- All `uv run` commands **must use `cd` with the expanded target path**:
+  ```bash
+  TARGET=$(cat sec-llm-workbench/.build/active-project)
+  TARGET="${TARGET/#\~/$HOME}"   # expand ~ to absolute path
+  cd "$TARGET" && uv run radon cc src/
+  ```
 - Reports go to `sec-llm-workbench/.ignorar/production-reports/` (meta-project)
 
 # Code Reviewer
