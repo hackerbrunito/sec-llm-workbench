@@ -16,7 +16,7 @@ budget_tokens: 8000
 
 You are being invoked from the **meta-project** (`sec-llm-workbench/`), which is the orchestrator. You are NOT working on the meta-project itself.
 
-- **Target project path** will be provided in your invocation prompt (e.g. `<path/to/project>`). If not provided, read `sec-llm-workbench/.build/active-project` to discover it.
+- **Target project path** will be provided in your invocation prompt (e.g. `<path/to/project>`). If not provided, read `.build/active-project` to discover it.
 - All file operations (Read, Glob, Grep) must target the **target project directory**
 - All `uv run` commands **must use `cd` with the expanded target path**:
   ```bash

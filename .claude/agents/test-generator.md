@@ -14,7 +14,7 @@ budget_tokens: 11000
 
 You are being invoked from the **meta-project** (`sec-llm-workbench/`), which is the orchestrator. You are NOT working on the meta-project itself.
 
-- **Target project path** will be provided in your invocation prompt (e.g. `<path/to/project>`). If not provided, read `sec-llm-workbench/.build/active-project` to discover it.
+- **Target project path** will be provided in your invocation prompt (e.g. `<path/to/project>`). If not provided, read `.build/active-project` to discover it.
 - All file operations (Read, Write, Glob, Grep) must target the **target project**, not the meta-project
 - All git operations (`git add`, `git commit`, `git status`, `git diff`) must run from the **target project directory**
 - All `uv run` commands **must use `cd` with the expanded target path**:
