@@ -64,8 +64,9 @@ Otherwise: always use Batched mode.
 3. **Incremental append** — each agent type has exactly one report file for the entire run. Every spawn of the same agent type appends its batch section. No merge step.
 4. **Fixed timestamp** — the Operator computes `FIXED_TIMESTAMP` once at startup and embeds it in every manifest section. All spawns of the same agent write to the same filename.
 5. **Sequential-per-agent, parallel-across-agents** — batches for a given agent type run one at a time (spawn → DONE → next spawn). Different agent types run in parallel with each other.
-6. **Context preservation** — main session, Operator, and every verification agent must protect their context window. No large data embedded in prompts.
-7. **No autonomous recovery** — if something goes wrong, the Operator asks the human. Never self-recovers.
+6. **Two-tier summarization** — batch agents write findings only. After all batches for an agent type complete, a dedicated report-summarizer reads the full report and produces a compact summary (20-30 lines). The final-report-agent reads only the 5 compact summaries — never full reports.
+7. **Context preservation** — main session, Operator, and every verification agent must protect their context window. No large data embedded in prompts.
+8. **No autonomous recovery** — if something goes wrong, the Operator asks the human. Never self-recovers.
 
 ### Main Session Role (YOU — the Claude instance reading this)
 
@@ -98,8 +99,8 @@ Then execute in order:
 3. Define batch assignments for all 5 agents (see batch sizing rules below)
 4. Write the batch manifest to:
    {PROJECT_PATH}/.ignorar/production-reports/batch-manifest.md
-   (First line of manifest: FIXED_TIMESTAMP: {value})
-5. Confirm these report directories exist — create if missing:
+   (First line: FIXED_TIMESTAMP: {value})
+5. Confirm these directories exist — create if missing:
    {PROJECT_PATH}/.ignorar/production-reports/best-practices-enforcer/current/
    {PROJECT_PATH}/.ignorar/production-reports/security-auditor/current/
    {PROJECT_PATH}/.ignorar/production-reports/hallucination-detector/current/
@@ -107,20 +108,25 @@ Then execute in order:
    {PROJECT_PATH}/.ignorar/production-reports/test-generator/current/
    {PROJECT_PATH}/.ignorar/production-reports/static-checks/current/
 6. Spawn Wave 1 agents — first batch of each type in parallel (across types)
-7. As each agent reports DONE: spawn next batch for that agent type only
-8. When all Wave 1 types finish all batches → spawn Wave 2 (same pattern)
-9. When all Wave 2 types finish all batches → spawn Static Checks Agent
-10. When static checks report file exists → spawn Final Report Agent
-11. Receive compact verdict from Final Report Agent → relay verbatim to main session → shut down
+7. As each batch reports DONE: spawn the next batch for that agent type
+8. As each Wave 1 agent TYPE completes ALL its batches:
+   → immediately spawn report-summarizer for that type (do not wait for other types)
+9. When ALL Wave 1 types have finished all batches → spawn Wave 2 (same pattern)
+10. As each Wave 2 agent TYPE completes ALL its batches:
+    → immediately spawn report-summarizer for that type
+    → when ALL Wave 2 types have finished all batches → also spawn Static Checks Agent
+11. Wait for ALL 5 report-summarizers AND Static Checks Agent to report DONE
+12. Spawn Final Report Agent
+13. Receive compact verdict from Final Report Agent → relay verbatim to main session → shut down
 
 Batch sizing rules:
-| Agent                   | Context Risk | Batch Size         | Grouping                        |
-|-------------------------|--------------|--------------------|----------------------------------|
-| best-practices-enforcer | Low          | 4–5 files          | By module directory              |
-| security-auditor        | Medium       | 3–4 files          | By module directory              |
-| hallucination-detector  | High         | By library         | httpx / pydantic / structlog / etc. |
-| code-reviewer           | Medium       | 3–4 files          | By module directory              |
-| test-generator          | Highest      | 1 module per batch | pytest scoped to that module only |
+| Agent                   | Context Risk | Batch Size         | Grouping                            |
+|-------------------------|--------------|--------------------|--------------------------------------|
+| best-practices-enforcer | Low          | 4–5 files          | By module directory                  |
+| security-auditor        | Medium       | 3–4 files          | By module directory                  |
+| hallucination-detector  | High         | By library         | httpx / pydantic / structlog / etc.  |
+| code-reviewer           | Medium       | 3–4 files          | By module directory                  |
+| test-generator          | Highest      | 1 module per batch | pytest scoped to that module only    |
 
 Model assignments (Opus is explicitly forbidden — no exceptions):
 | Role                    | Model  | Rationale                              |
@@ -131,13 +137,16 @@ Model assignments (Opus is explicitly forbidden — no exceptions):
 | hallucination-detector  | Sonnet | Context7 queries + reasoning required  |
 | code-reviewer           | Sonnet | Quality scoring + reasoning required   |
 | test-generator          | Haiku  | Run pytest + read coverage output      |
-| Static Checks Agent     | Haiku  | 4 bash commands — pure mechanical      |
-| Final Report Agent      | Haiku  | grep summary + threshold lookup        |
+| report-summarizer       | Haiku  | Read one report, distill findings      |
+| static-checks-agent     | Haiku  | 4 bash commands — pure mechanical      |
+| final-report-agent      | Haiku  | Read 5 compact summaries, send verdict |
 
 Operator rules — no exceptions:
 - Do NOT embed file lists or large data in agent prompts (use manifest sections)
 - Do NOT read report files or batch sections into your own context
 - Do NOT spawn next batch before previous batch reports DONE
+- Do NOT spawn report-summarizer before all batches for that type report DONE
+- Do NOT spawn final-report-agent before all 5 summaries and static checks report DONE
 - Do NOT make autonomous decisions when something goes wrong — ask the human
 - Confirm file existence with ls — never reading content
 - If anything goes wrong: report to human what was expected, what was observed, no fix
@@ -165,20 +174,18 @@ FIXED_TIMESTAMP: 2026-02-23-143022
 
 **Append findings to:**
 {PROJECT_PATH}/.ignorar/production-reports/{agent-name}/current/{FIXED_TIMESTAMP}-{agent-name}.md
-
-**IS_LAST_BATCH:** false
 ```
 
-Last batch for each agent type has `IS_LAST_BATCH: true`.
+No `IS_LAST_BATCH` field — the report-summarizer handles the summary after all batches complete.
 
 ---
 
-### Agent Prompt Template (each batch spawn)
+### Batch Agent Prompt Template
 
 ```
 You are {agent-name} for the project at {PROJECT_PATH} — verification run.
 
-YOUR SCOPE: BATCH {B} of {T} ({batch-description}).
+YOUR SCOPE: BATCH {B} of {T} ({batch-description}). Analyze ONLY the files in your batch.
 
 Rules to follow:
 - ~/sec-llm-workbench/.claude/rules/verification-thresholds.md
@@ -191,32 +198,29 @@ Read ONLY the section with this exact header:
 ## [{agent-name}] [batch-{B}-of-{T}]
 Ignore all other sections.
 
-That section contains: files to analyze, shared report path, IS_LAST_BATCH flag.
+That section contains: the files to analyze and the shared report path to append to.
 
 When done:
-1. If report file does not exist: create it with document header first (see append mechanism below)
-2. Append your batch section (## Batch {B} of {T}) using bash >> append
-3. If IS_LAST_BATCH is true: also append ## Summary (All Batches) section
+1. If the report file does not exist yet: create it with the document header (see append
+   mechanism below)
+2. Append your batch section using bash >> (see append mechanism below)
+3. End your batch section with the line: ### Batch {B} Status: PASS / FAIL
 4. Send operator: "DONE: {agent-name} batch {B} of {T} — appended to {path}"
-5. Wait for shutdown — take no further action.
+5. Wait for shutdown. Take no further action.
 
-DO NOT analyze files outside your manifest section.
-DO NOT overwrite the report file — always append (>>).
-DO NOT read other agents' report files.
+⚠️ CRITICAL — append rules:
+- Use ONLY bash >> to write to the report file. NEVER use the Write tool on this file.
+- NEVER overwrite the report file. Always append (>>).
+- Do NOT analyze files outside your manifest section.
+- Do NOT read other agents' report files.
 ```
 
 ---
 
-### Report File Structure (Incremental Append)
+### Append Mechanism (batch agents execute this)
 
-**Path pattern:**
-```
-{PROJECT_PATH}/.ignorar/production-reports/{agent-name}/current/{FIXED_TIMESTAMP}-{agent-name}.md
-```
-
-**Append mechanism each batch spawn executes:**
 ```bash
-# Create header only if file does not exist yet
+# Create header only if file does not exist
 [ -f {report_path} ] || cat > {report_path} << 'HEADER'
 # {agent-name} — Verification Report
 Generated: {FIXED_TIMESTAMP}
@@ -224,7 +228,7 @@ Project: {PROJECT_PATH}
 ---
 HEADER
 
-# Every batch (including first): append batch section
+# Append this batch's section
 cat >> {report_path} << 'BATCH'
 ## Batch {B} of {T} — {description}
 
@@ -240,11 +244,35 @@ cat >> {report_path} << 'BATCH'
 
 ---
 BATCH
+```
 
-# Last batch only: also append Summary section
-cat >> {report_path} << 'SUMMARY'
-## Summary (All Batches)
+---
 
+### Report-Summarizer Prompt (spawned once per agent type, after all its batches complete)
+
+```
+You are the report-summarizer for {agent-name}.
+
+Read the full report at:
+{PROJECT_PATH}/.ignorar/production-reports/{agent-name}/current/{FIXED_TIMESTAMP}-{agent-name}.md
+
+Read the thresholds from:
+~/sec-llm-workbench/.claude/rules/verification-thresholds.md
+
+Produce a compact summary (20-30 lines) and write it to:
+{PROJECT_PATH}/.ignorar/production-reports/{agent-name}/current/{FIXED_TIMESTAMP}-{agent-name}-summary.md
+
+Summary format:
+# {agent-name} — Compact Summary
+Generated: {FIXED_TIMESTAMP}
+
+## Batch Results
+| Batch   | Status |
+|---------|--------|
+| Batch 1 | PASS   |
+(one row per batch)
+
+## Findings Count
 | Severity | Count |
 |----------|-------|
 | CRITICAL | N     |
@@ -252,61 +280,68 @@ cat >> {report_path} << 'SUMMARY'
 | MEDIUM   | N     |
 | LOW      | N     |
 
-**Threshold applied:** [from verification-thresholds.md]
-**Overall Status: PASS / FAIL**
-SUMMARY
+## Blocking Issues (CRITICAL / HIGH only — max 5)
+- file:line — description
+(or "None" if all clear)
+
+## Overall Status: PASS / FAIL
+Threshold applied: [from verification-thresholds.md]
+
+When done:
+1. Write the compact summary to the path above
+2. Send operator: "DONE: {agent-name} summary — Overall: PASS/FAIL — saved to {path}"
+3. Shut down.
 ```
 
 ---
 
-### Static Checks Agent Prompt
+### Static Checks Agent Prompt (spawned after all Wave 2 batches complete)
 
 ```
-You are the Static Checks Agent for the project at {PROJECT_PATH}.
+You are the static-checks-agent for the project at {PROJECT_PATH}.
 
-Run these 4 commands (cd to project first):
+Run 4 checks and save all output (stdout + stderr + exit codes) to:
+{PROJECT_PATH}/.ignorar/production-reports/static-checks/current/{FIXED_TIMESTAMP}-static-checks.md
+
+Use bash redirection only — do not use Write tool.
+
+Commands to run:
   cd {PROJECT_PATH}
   uv run ruff format src tests --check
   uv run ruff check src tests
   uv run mypy src
   uv run pytest tests/ -v
 
-Save all stdout, stderr, and exit codes to:
-{PROJECT_PATH}/.ignorar/production-reports/static-checks/current/{FIXED_TIMESTAMP}-static-checks.md
-
-Then send operator: "DONE: static checks — report saved to {path}"
+After saving: send operator "DONE: static checks — report saved to {path}"
 Shut down after sending.
 ```
 
 ---
 
-### Final Report Agent Prompt
+### Final Report Agent Prompt (spawned after all 5 summaries + static checks complete)
 
 ```
-You are the Final Report Agent.
+You are the final-report-agent.
 
-Your ONLY job:
-1. Read FIXED_TIMESTAMP from the first line of:
-   {PROJECT_PATH}/.ignorar/production-reports/batch-manifest.md
+Read these 5 compact summary files (20-30 lines each):
+- {PROJECT_PATH}/.ignorar/production-reports/best-practices-enforcer/current/{FIXED_TIMESTAMP}-best-practices-enforcer-summary.md
+- {PROJECT_PATH}/.ignorar/production-reports/security-auditor/current/{FIXED_TIMESTAMP}-security-auditor-summary.md
+- {PROJECT_PATH}/.ignorar/production-reports/hallucination-detector/current/{FIXED_TIMESTAMP}-hallucination-detector-summary.md
+- {PROJECT_PATH}/.ignorar/production-reports/code-reviewer/current/{FIXED_TIMESTAMP}-code-reviewer-summary.md
+- {PROJECT_PATH}/.ignorar/production-reports/test-generator/current/{FIXED_TIMESTAMP}-test-generator-summary.md
 
-2. Extract ONLY the ## Summary section of each agent report using bash:
-   grep -A 30 "## Summary" {report_path}
+Read the static checks report:
+- {PROJECT_PATH}/.ignorar/production-reports/static-checks/current/{FIXED_TIMESTAMP}-static-checks.md
 
-3. Read the full static checks report (it is small — stdout of 4 commands).
+Read thresholds from:
+- ~/sec-llm-workbench/.claude/rules/verification-thresholds.md
 
-4. Apply thresholds from:
-   ~/sec-llm-workbench/.claude/rules/verification-thresholds.md
-
-5. Compose the compact verdict (≤ 30 lines) using the Verdict Format below.
-
-6. Send verdict as a MESSAGE to the operator (SendMessage — do NOT print it, SEND it).
-
-7. Shut down immediately after sending.
-
-Do NOT write any file. Do NOT read full report files. Do NOT read other sections.
+Compose the compact verdict (≤ 30 lines) using the format below.
+Send it as a SendMessage to the operator. Do NOT print it — SEND it.
+Write no files. Shut down immediately after sending.
 ```
 
-### Verdict Format (sent as message — never written to a file)
+### Verdict Format (sent as message — never written to file)
 
 ```
 VERIFICATION — FINAL VERDICT
@@ -330,20 +365,58 @@ Static Checks:
 
 OVERALL: PASS ✓   (or FAIL — list which agents/checks failed)
 
-Report files:
-- {PROJECT_PATH}/.ignorar/production-reports/best-practices-enforcer/current/{FIXED_TIMESTAMP}-best-practices-enforcer.md
-- {PROJECT_PATH}/.ignorar/production-reports/security-auditor/current/{FIXED_TIMESTAMP}-security-auditor.md
-- {PROJECT_PATH}/.ignorar/production-reports/hallucination-detector/current/{FIXED_TIMESTAMP}-hallucination-detector.md
-- {PROJECT_PATH}/.ignorar/production-reports/code-reviewer/current/{FIXED_TIMESTAMP}-code-reviewer.md
-- {PROJECT_PATH}/.ignorar/production-reports/test-generator/current/{FIXED_TIMESTAMP}-test-generator.md
-- {PROJECT_PATH}/.ignorar/production-reports/static-checks/current/{FIXED_TIMESTAMP}-static-checks.md
+Full reports: {PROJECT_PATH}/.ignorar/production-reports/
+```
+
+---
+
+### Architecture Flow
+
+```
+Main session
+│  TeamCreate → spawns Operator → waits silently
+│  Receives ONE verdict message → displays to human. Reads zero files.
+│
+Operator
+│  1. Reads rules + project files
+│  2. Computes FIXED_TIMESTAMP, writes batch manifest
+│  3. Spawns Wave 1 (parallel across types, sequential within)
+│  4. As each Wave 1 type finishes all batches → spawns its report-summarizer
+│  5. Spawns Wave 2 (same pattern as Wave 1)
+│  6. As each Wave 2 type finishes all batches → spawns its report-summarizer
+│  7. After all Wave 2 batches done → spawns Static Checks Agent
+│  8. Waits for all 5 summaries + Static Checks to report DONE
+│  9. Spawns Final Report Agent
+│ 10. Receives verdict → relays to main session → shuts down
+│
+├── WAVE 1 (batch agents — sequential per type, parallel across types)
+│   ├── best-practices-enforcer  batch-1→DONE→batch-2→DONE → [report-summarizer BPE]
+│   ├── security-auditor         batch-1→DONE→batch-2→DONE → [report-summarizer SA]
+│   └── hallucination-detector   batch-httpx→DONE→batch-pydantic→DONE → [report-summarizer HD]
+│
+├── WAVE 2 (same pattern)
+│   ├── code-reviewer    batch-1→DONE→batch-2→DONE → [report-summarizer CR]
+│   └── test-generator   batch-mod1→DONE→batch-mod2→DONE → [report-summarizer TG]
+│
+├── REPORT SUMMARIZERS (5 total — Haiku — run as soon as their type finishes)
+│   Each reads ONE full report → writes ONE compact summary (20-30 lines)
+│
+├── STATIC CHECKS AGENT (Haiku — after all Wave 2 batches done)
+│   Runs 4 bash commands → saves output via bash redirection
+│
+└── FINAL REPORT AGENT (Haiku — after all 5 summaries + static checks done)
+        Reads 5 compact summaries (~150 lines total) + static checks report
+        Applies thresholds → composes verdict → sends as message → shuts down
+
+Context used by main session: ONE message. Zero file reads.
+Context used by Final Report Agent: ~150-230 lines total. No overflow risk.
 ```
 
 ---
 
 ## Mode 2: Simple Waves (--simple flag only)
 
-Only use when `--simple` is explicitly passed AND fewer than 15 Python files AND no file > 200 lines.
+Use only when `--simple` is explicitly passed AND fewer than 15 Python files AND no file > 200 lines.
 No TeamCreate. Main session spawns agents directly in 2 waves.
 
 ### Step 1: Pending Files
@@ -370,8 +443,7 @@ EXPECTED OUTPUT STRUCTURE:
 - **Fix:** [how to fix]
 
 ## Summary
-- Total violations: N
-- CRITICAL: 0 / MEDIUM: N / LOW: N
+- Total violations: N / CRITICAL: 0 / MEDIUM: N / LOW: N
 
 Save report to: {PROJECT_PATH}/.ignorar/production-reports/best-practices-enforcer/current/{TIMESTAMP}-best-practices-enforcer.md
 """)
@@ -386,8 +458,7 @@ EXPECTED OUTPUT STRUCTURE:
 ## Security Findings
 ### 1. [Vulnerability Title]
 - **File:** src/module/file.py:34
-- **CWE:** CWE-89
-- **Severity:** CRITICAL
+- **CWE:** CWE-89 / **Severity:** CRITICAL
 - **Fix:** [parameterized queries / env var / etc.]
 - **OWASP:** A03:2021
 
@@ -404,18 +475,8 @@ Task(subagent_type="hallucination-detector", model="sonnet", prompt="""
 Verify library syntax in {PROJECT_PATH} against Context7 MCP.
 
 EXPECTED OUTPUT STRUCTURE:
-## Hallucination Check Results
-### ✅ VERIFIED USAGE
-#### 1. httpx AsyncClient
-- **Pattern:** httpx.AsyncClient(timeout=30.0)
-- **File:** src/api/client.py:15
-- **Context7 Status:** VERIFIED
-
-### ⚠️ HALLUCINATED USAGE
-#### 1. [Method name]
-- **Pattern:** [what the code does]
-- **Status:** UNVERIFIED — not in docs
-- **Recommendation:** [correct usage]
+### ✅ VERIFIED: httpx.AsyncClient(timeout=30.0) — src/api/client.py:15
+### ⚠️ HALLUCINATED: [pattern] — [file:line] — Recommendation: [correct usage]
 
 ## Summary
 - Total checked: N / VERIFIED: N / HALLUCINATED: N
@@ -441,7 +502,7 @@ Save report to: {PROJECT_PATH}/.ignorar/production-reports/code-reviewer/current
 **test-generator:**
 ```
 Task(subagent_type="test-generator", model="haiku", prompt="""
-Analyze test coverage in {PROJECT_PATH}. Generate missing tests. Threshold: ≥ 80%.
+Analyze test coverage in {PROJECT_PATH}. Threshold: ≥ 80%.
 
 Save report to: {PROJECT_PATH}/.ignorar/production-reports/test-generator/current/{TIMESTAMP}-test-generator.md
 """)
@@ -484,11 +545,8 @@ After each agent completes, append to `.build/logs/agents/YYYY-MM-DD.jsonl`:
 {
   "id": "<uuid>",
   "timestamp": "<ISO8601>",
-  "session_id": "<session_id>",
   "agent": "<agent_name>",
-  "files": ["<file1>", "<file2>"],
   "status": "PASSED|FAILED",
-  "findings": [],
   "duration_ms": 0
 }
 ```
@@ -501,7 +559,7 @@ After each agent completes, append to `.build/logs/agents/YYYY-MM-DD.jsonl`:
 
 ## Verification Thresholds Reference
 
-See: `~/sec-llm-workbench/.claude/rules/verification-thresholds.md`
+Full definitions: `~/sec-llm-workbench/.claude/rules/verification-thresholds.md`
 
 | Agent                   | PASS                        | FAIL                    | Blocking |
 |-------------------------|-----------------------------|-------------------------|----------|
