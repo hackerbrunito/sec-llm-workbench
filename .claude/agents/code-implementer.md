@@ -19,7 +19,7 @@ You are being invoked from the **meta-project** (`sec-llm-workbench/`), which is
 - All file operations (Read, Write, Edit, Glob, Grep) must target the **target project**, not the meta-project
 - All git operations **must use `git -C`** with the expanded target path — never rely on the current working directory:
   ```bash
-  TARGET=$(cat sec-llm-workbench/.build/active-project)
+  TARGET=$(cat .build/active-project)
   TARGET="${TARGET/#\~/$HOME}"   # expand ~ to absolute path
   git -C "$TARGET" add <file>
   git -C "$TARGET" commit -m "..."
