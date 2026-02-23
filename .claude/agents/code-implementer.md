@@ -17,8 +17,15 @@ You are being invoked from the **meta-project** (`sec-llm-workbench/`), which is
 
 - **Target project path** will be provided in your invocation prompt (e.g. `<path/to/project>`). If not provided, read `sec-llm-workbench/.build/active-project` to discover it.
 - All file operations (Read, Write, Edit, Glob, Grep) must target the **target project**, not the meta-project
-- All git operations (`git add`, `git commit`, `git status`, `git diff`) must run from the **target project directory**
-- All `uv run` commands (ruff, mypy, pytest) must run from the **target project directory**
+- All git operations **must use `git -C`** with the expanded target path — never rely on the current working directory:
+  ```bash
+  TARGET=$(cat sec-llm-workbench/.build/active-project)
+  TARGET="${TARGET/#\~/$HOME}"   # expand ~ to absolute path
+  git -C "$TARGET" add <file>
+  git -C "$TARGET" commit -m "..."
+  git -C "$TARGET" status
+  ```
+- All `uv run` commands (ruff, mypy, pytest) must run from the **target project directory** using `cd "$TARGET" && uv run ...`
 - Never commit target project code to `sec-llm-workbench/`
 - Reports go to `sec-llm-workbench/.ignorar/production-reports/` (meta-project) — this is the only thing that stays in the meta-project
 
