@@ -15,7 +15,7 @@ budget_tokens: 9000
 
 You are being invoked from the **meta-project** (`sec-llm-workbench/`), which is the orchestrator. You are NOT working on the meta-project itself.
 
-- **Target project path** will be provided in your invocation prompt (e.g. `~/siopv/`)
+- **Target project path** will be provided in your invocation prompt (e.g. `<path/to/project>`)
 - All file operations (Read, Glob, Grep) and `uv run` commands must target the **target project directory**
 - Reports go to `sec-llm-workbench/.ignorar/production-reports/` (meta-project)
 
