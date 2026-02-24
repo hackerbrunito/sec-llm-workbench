@@ -1,6 +1,6 @@
 ---
 name: verify
-disable-model-invocation: true
+# disable-model-invocation: true  # bug #26251 — broken on v2.1.51, context:fork handles isolation
 description: "Executes mandatory 5-agent verification using batched TeamCreate architecture (context-safe, any codebase size)"
 context: fork
 agent: general-purpose
