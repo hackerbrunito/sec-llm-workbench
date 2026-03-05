@@ -201,8 +201,30 @@ Target project: `[TARGET_PROJECT]`
 Save your report to `.ignorar/production-reports/regression-guard/phase-{N}/{TIMESTAMP}-phase-{N}-regression-guard-{slug}.md`
 """
 )
+Task(
+    subagent_type="dependency-scanner",
+    model="sonnet",
+    prompt="""Scan all project dependencies for known CVEs using uv pip audit.
+Report all CRITICAL and HIGH severity vulnerabilities.
+
+Target project: `[TARGET_PROJECT]`
+
+Save your report to `.ignorar/production-reports/dependency-scanner/phase-{N}/{TIMESTAMP}-phase-{N}-dependency-scanner-{slug}.md`
+"""
+)
+Task(
+    subagent_type="circular-import-detector",
+    model="sonnet",
+    prompt="""Detect circular imports in all Python source files using AST-based
+import graph analysis and DFS cycle detection.
+
+Target project: `[TARGET_PROJECT]`
+
+Save your report to `.ignorar/production-reports/circular-import-detector/phase-{N}/{TIMESTAMP}-phase-{N}-circular-import-detector-{slug}.md`
+"""
+)
 ```
-**Wait for all 6 to complete** (~7 min max)
+**Wait for all 8 to complete** (~7 min max)
 
 **Total with Wave 3: ~19 minutes** (Wave 1: ~7 min + Wave 2: ~5 min + Wave 3: ~7 min)
 
@@ -663,6 +685,143 @@ Save your report to `.ignorar/production-reports/regression-guard/phase-{N}/{TIM
 - Fix: ...
 ```
 
+### 12. dependency-scanner
+
+**Scope:** Known CVE detection in Python package dependencies
+
+**Model:** Sonnet
+
+**When to use:**
+- Every /verify run (Wave 3, parallel with other Wave 3 agents)
+- After adding or upgrading any package in pyproject.toml
+- Before releasing to production (security gate)
+
+**What it checks:**
+
+| Check | Description | Severity |
+|-------|-------------|----------|
+| **CRITICAL CVE** | Dependency has CVE with CVSS >= 9.0 | CRITICAL |
+| **HIGH CVE** | Dependency has CVE with CVSS 7.0-8.9 | HIGH |
+| **MEDIUM CVE** | Dependency has CVE with CVSS 4.0-6.9 | MEDIUM (warning) |
+| **LOW CVE** | Dependency has CVE with CVSS < 4.0 | LOW (warning) |
+| **Audit tool unavailable** | Neither uv pip audit nor pip-audit is installed | CRITICAL |
+
+**Verification method:**
+1. Resolve target project path from `.build/active-project`
+2. Verify `pyproject.toml` exists in the target project
+3. Run `uv pip audit` (primary) or `uv run pip-audit --format=json` (fallback)
+4. Parse output: extract package name, installed version, CVE ID, CVSS score, severity
+5. Categorize findings by severity: CRITICAL, HIGH, MEDIUM, LOW
+6. Apply PASS/FAIL logic based on severity thresholds
+
+**PASS/FAIL criteria:**
+- **PASS:** 0 CRITICAL CVEs, 0 HIGH CVEs in any dependency
+- **FAIL:** Any CRITICAL or HIGH severity CVE found in any installed package
+- **Warning (non-blocking):** MEDIUM or LOW CVEs are logged but do not block
+
+**Example invocation:**
+```python
+Task(
+    subagent_type="dependency-scanner",
+    model="sonnet",
+    prompt="""Scan all project dependencies for known CVEs.
+
+Target project: `[TARGET_PROJECT]`
+
+Run uv pip audit and report all CRITICAL and HIGH severity CVEs.
+
+PASS criteria: 0 CRITICAL CVEs, 0 HIGH CVEs.
+
+Save your report to `.ignorar/production-reports/dependency-scanner/phase-{N}/{TIMESTAMP}-phase-{N}-dependency-scanner-audit.md`
+"""
+)
+```
+
+**Report structure:**
+```markdown
+# Dependency Scanner Report
+
+## Summary
+- Total packages scanned: N
+- CRITICAL CVEs: N
+- HIGH CVEs: N
+- MEDIUM CVEs: N
+- LOW CVEs: N
+- Status: PASS / FAIL
+
+## Findings
+### [CVE-XXXX-XXXXX] [Severity] — [package-name] [version]
+- Description: [CVE description]
+- CVSS Score: N.N
+- Fix: Upgrade to [package-name] >= [fixed-version]
+```
+
+### 13. circular-import-detector
+
+**Scope:** Python circular import cycle detection via AST-based import graph analysis
+
+**Model:** Sonnet
+
+**When to use:**
+- Every /verify run (Wave 3, parallel with other Wave 3 agents)
+- After adding new modules or restructuring the package layout
+- After any refactoring that moves imports between modules
+
+**What it checks:**
+
+| Check | Description | Severity |
+|-------|-------------|----------|
+| **Circular import cycle** | Module A imports B which imports A (direct or transitive) | HIGH |
+| **Core module in cycle** | Cycle involves state, DI, graph, or config modules | CRITICAL |
+
+**Verification method:**
+1. Find all `.py` files in `src/` using `find`
+2. Parse each file with `ast.parse()` to extract `Import` and `ImportFrom` nodes
+3. Build directed graph: module -> set of modules it imports
+4. Run DFS on the full graph to detect cycles
+5. For each cycle: report the full chain and the exact import lines causing the cycle
+
+**PASS/FAIL criteria:**
+- **PASS:** 0 circular import cycles detected in `src/`
+- **FAIL:** Any circular import cycle detected (even one causes potential runtime `ImportError`)
+
+**Example invocation:**
+```python
+Task(
+    subagent_type="circular-import-detector",
+    model="sonnet",
+    prompt="""Detect circular imports in all Python source files.
+
+Target project: `[TARGET_PROJECT]`
+
+Build full import graph using AST and run DFS cycle detection.
+
+PASS criteria: 0 cycles in src/.
+
+Save your report to `.ignorar/production-reports/circular-import-detector/phase-{N}/{TIMESTAMP}-phase-{N}-circular-import-detector-scan.md`
+"""
+)
+```
+
+**Report structure:**
+```markdown
+# Circular Import Detector Report
+
+## Summary
+- Total modules analyzed: N
+- Circular import cycles found: N
+- Status: PASS / FAIL
+
+## Cycles Found (if any)
+### Cycle 1
+Chain: module.a -> module.b -> module.c -> module.a
+Files involved:
+- src/[path]/a.py line N: from module.b import X
+- src/[path]/b.py line N: from module.c import Y
+- src/[path]/c.py line N: from module.a import Z
+Fix: Break cycle by extracting shared dependency to a new module, or use lazy imports.
+```
+
 #### Idle State Management
 
 **Note:** Teammates go idle after every turn - this is normal behavior.
@@ -882,6 +1041,8 @@ Specialized agents that target specific runtime safety concerns beyond standard 
 | smoke-test-runner | Every /verify run (Wave 3) | End-to-end pipeline execution | ~500+ líneas (flexible) | Sonnet |
 | config-validator | Every /verify run (Wave 3) | Env var and docker config consistency | ~500+ líneas (flexible) | Sonnet |
 | regression-guard | Every /verify run (Wave 3) | Cross-phase regression detection | ~500+ líneas (flexible) | Sonnet |
+| dependency-scanner | Every /verify run (Wave 3) | CVE scan of all dependencies | ~300+ lines | Sonnet |
+| circular-import-detector | Every /verify run (Wave 3) | Circular import cycle detection | ~300+ lines | Sonnet |
 
 ### async-safety-auditor
 
