@@ -16,7 +16,7 @@ El orquestador delega estas decisiones a code-implementer SIN preguntar:
 | Falta test | Generar test |
 | Código duplicado | Refactorizar |
 | Vulnerabilidad OWASP | Corregir inmediatamente |
-| Selección de modelo | Usar decision tree de `.claude/rules/model-selection-strategy.md` |
+| Selección de modelo | Usar decision tree de `.claude/docs/model-selection-strategy.md` (read on demand) |
 
 ## Fuentes Obligatorias (code-implementer)
 
@@ -50,4 +50,4 @@ El orquestador delega estas decisiones a code-implementer SIN preguntar:
 
 ## Model Routing Rules
 
-**→ See `.claude/rules/model-selection-strategy.md` for complete model routing strategy**
+**→ Read `.claude/docs/model-selection-strategy.md` on demand for complete model routing strategy**

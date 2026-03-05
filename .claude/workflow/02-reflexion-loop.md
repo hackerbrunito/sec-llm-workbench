@@ -18,7 +18,7 @@ Para CADA tarea de desarrollo:
 - code-implementer consulta Context7 para TODO el código (no solo bibliotecas)
 - code-implementer genera código con técnicas/patrones modernos
 - code-implementer reporta resultado (~500+ líneas, flexible)
-- **Modelo:** Ver `.claude/rules/model-selection-strategy.md` para routing
+- **Modelo:** Ver `.claude/docs/model-selection-strategy.md` para routing (read on demand)
 
 ## 4. CHECKPOINT HUMANO
 - Orquestador presenta resumen del reporte de code-implementer
@@ -49,7 +49,7 @@ Submit 2 agents in parallel (all use Sonnet):
 The `/verify` skill uses `.claude/scripts/orchestrate-parallel-verification.py` to:
 - Identify pending files in `.build/checkpoints/pending/`
 - Execute Wave 1 agents in parallel
-- Check thresholds (PASS/FAIL) per `.claude/rules/verification-thresholds.md`
+- Check thresholds (PASS/FAIL) per `.claude/docs/verification-thresholds.md`
 - If Wave 1 passes, execute Wave 2 agents in parallel
 - Log results to `.build/logs/agents/YYYY-MM-DD.jsonl`
 - Clear pending markers if all agents pass

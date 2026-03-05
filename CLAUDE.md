@@ -8,7 +8,7 @@
 
 **YOU MUST** when writing code:
 3. Query Context7 MCP before using external libraries
-4. Follow @.claude/workflow/02-reflexion-loop.md
+4. Follow `.claude/workflow/02-reflexion-loop.md` (read on demand)
 
 **YOU MUST** before commit:
 5. Execute `/verify` (runs 5 verification agents)
@@ -22,7 +22,7 @@
 | Topic | File |
 |-------|------|
 | Session start | @.claude/workflow/01-session-start.md |
-| Reflexion Loop | @.claude/workflow/02-reflexion-loop.md |
+| Reflexion Loop | `.claude/workflow/02-reflexion-loop.md` (on-demand) |
 | Human checkpoints | @.claude/workflow/03-human-checkpoints.md |
 | Agents | @.claude/workflow/04-agents.md |
 | Before commit | @.claude/workflow/05-before-commit.md |
@@ -36,6 +36,9 @@
 | Orchestrator invocation | `/orchestrator-protocol` or read `.claude/workflow/07-orchestrator-invocation.md` |
 | Python standards | `/coding-standards-2026` skill |
 | Techniques catalog | `/techniques-reference` or read `.claude/docs/techniques.md` |
+| Agent tool schemas | Read `.claude/docs/agent-tool-schemas.md` when invoking agents |
+| Model selection | Read `.claude/docs/model-selection-strategy.md` when choosing models |
+| Verification thresholds | Read `.claude/docs/verification-thresholds.md` before checking PASS/FAIL |
 
 ## Compact Instructions
 

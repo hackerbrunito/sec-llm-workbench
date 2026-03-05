@@ -1,6 +1,8 @@
 <!-- version: 2026-02 -->
 # Invocación de Agentes
 
+**Prerequisite:** Read `.claude/workflow/02-reflexion-loop.md` before running the reflection loop (on-demand, not auto-loaded).
+
 ## Agente de Implementación
 
 | Agente | Cuándo | Qué hace | Reporte | Modelo Recomendado |
@@ -24,7 +26,7 @@
 
 ## 5 Agentes de Verificación
 
-**→ See `.claude/rules/verification-thresholds.md` for PASS/FAIL criteria for each agent**
+**→ See `.claude/docs/verification-thresholds.md` for PASS/FAIL criteria for each agent**
 
 | Agente | Cuándo | Qué verifica | Reporte | Modelo Recomendado |
 |--------|--------|--------------|---------|-------------------|
@@ -36,7 +38,7 @@
 
 ## Model Selection
 
-**→ See `.claude/rules/model-selection-strategy.md` for model selection decision tree**
+**→ Read `.claude/docs/model-selection-strategy.md` on demand for model selection decision tree**
 
 **Quick Reference:**
 - **code-implementer:** Sonnet (default), Opus (>5 modules, architectural)
@@ -125,6 +127,297 @@ Save your report to `.ignorar/production-reports/test-generator/phase-{N}/{TIMES
 **Wait for both to complete** (~5 min max)
 
 **Total: ~12 minutes** (vs. ~87 minutes sequential, 86% improvement)
+
+#### Wave 3 - Submit 3 agents in parallel (after Wave 2 completes)
+```python
+Task(
+    subagent_type="integration-tracer",
+    model="sonnet",
+    prompt="""Trace execution paths from all entry points (CLI commands, graph add_node calls)
+through the full call chain. Verify parameter forwarding, detect stubs/hollow endpoints,
+dead code, and symbols exported in __all__ but never imported in execution paths.
+
+Target project: `[TARGET_PROJECT]`
+
+Save your report to `.ignorar/production-reports/integration-tracer/phase-{N}/{TIMESTAMP}-phase-{N}-integration-tracer-{slug}.md`
+"""
+)
+Task(
+    subagent_type="async-safety-auditor",
+    model="sonnet",
+    prompt="""Audit all async/sync boundary violations: asyncio.run() inside async contexts,
+sync blocking calls in async functions, missing await on coroutines, and event loop
+nesting issues.
+
+Target project: `[TARGET_PROJECT]`
+
+Save your report to `.ignorar/production-reports/async-safety-auditor/phase-{N}/{TIMESTAMP}-phase-{N}-async-safety-auditor-{slug}.md`
+"""
+)
+Task(
+    subagent_type="semantic-correctness-auditor",
+    model="sonnet",
+    prompt="""Audit all Python files for semantic correctness issues:
+1. @field_validator / @model_validator / @validator bodies that return v without any condition (no-op validators)
+2. Functions whose docstring describes behavior X but body does not implement X (returns empty/None/pass)
+3. except branches that silently swallow exceptions without logging or re-raising
+4. Fallback returns that should be errors (returning [] when real data was expected)
+
+Target project: `[TARGET_PROJECT]`
+
+Save your report to `.ignorar/production-reports/semantic-correctness-auditor/phase-{N}/{TIMESTAMP}-phase-{N}-semantic-correctness-auditor-{slug}.md`
+"""
+)
+```
+**Wait for all 3 to complete** (~7 min max)
+
+**Total with Wave 3: ~19 minutes** (Wave 1: ~7 min + Wave 2: ~5 min + Wave 3: ~7 min)
+
+## Wave 3 Verification Agents
+
+### 6. integration-tracer
+
+**Scope:** End-to-end execution path integrity — from entry points to leaf implementations
+
+**Model:** Sonnet
+
+**When to use:**
+- After code-implementer delivers new modules or modifies existing call chains
+- When adding new CLI commands or graph nodes
+- After refactoring that changes function signatures or parameter lists
+- When auditing for dead code or orphaned exports
+
+**What it checks:**
+
+| Check | Description | Severity |
+|-------|-------------|----------|
+| **Hollow entry points** | CLI commands or graph nodes that terminate in stubs (`pass`, `...`, `TODO`, `raise NotImplementedError`) without calling real implementation | CRITICAL |
+| **Parameter dropping** | Functions that accept parameters but do not forward them to the functions they call (silently dropped args) | HIGH |
+| **Dead exports** | Symbols listed in `__all__` that are never imported anywhere in the actual execution graph | HIGH |
+| **Unreachable code** | Functions defined but never called from any entry point (dead code in execution paths) | MEDIUM |
+| **Broken call chains** | Entry point → intermediate → leaf paths where an intermediate function does not call the expected next step | HIGH |
+
+**Verification method:**
+1. Identify all entry points: CLI commands (`typer`/`click` handlers), graph node functions (`add_node` targets), API route handlers
+2. For each entry point, trace the full call chain to leaf functions using AST analysis + grep
+3. At each call boundary, verify that parameters accepted by the caller are forwarded (not silently dropped)
+4. Check all `__all__` exports against actual imports in execution-reachable modules
+5. Flag functions that exist in source but have no caller in any traced path
+
+**PASS/FAIL criteria:**
+- **PASS:** 0 integration gaps (0 CRITICAL + 0 HIGH findings)
+- **FAIL:** Any CRITICAL or HIGH finding
+- **Warning (non-blocking):** MEDIUM findings (unreachable code) are logged but not blocking
+
+**Example invocation:**
+```python
+Task(
+    subagent_type="integration-tracer",
+    model="sonnet",
+    prompt="""Trace all execution paths in the target project.
+
+Target project: `/Users/bruno/siopv/`
+
+Entry points to trace:
+1. CLI: `src/siopv/interfaces/cli/main.py` — all typer commands
+2. Graph: `src/siopv/application/orchestration/graph.py` — all add_node() targets
+3. DI: `src/siopv/infrastructure/di/__init__.py` — all exported factory functions
+
+For each entry point:
+- Follow the call chain to leaf implementations
+- Verify parameters are forwarded at each boundary
+- Flag stubs, hollow endpoints, dropped parameters
+- Report __all__ exports never imported in execution paths
+- Report dead code (defined but never called)
+
+PASS criteria: 0 CRITICAL + 0 HIGH findings.
+
+Save your report to `.ignorar/production-reports/integration-tracer/phase-7/2026-03-05-150000-phase-7-integration-tracer-full-trace.md`
+"""
+)
+```
+
+**Report structure:**
+```markdown
+# Integration Tracer Report
+
+## Summary
+- Entry points traced: N
+- Call chains verified: N
+- Integration gaps found: N (C critical, H high, M medium)
+- Status: PASS / FAIL
+
+## Entry Points Traced
+### 1. [entry point name]
+- Chain: entry → func_a() → func_b() → leaf()
+- Parameters forwarded: YES / NO (details)
+- Status: OK / GAP
+
+## Findings
+### [ID] [Severity] [Title]
+- File: path/to/file.py:line
+- Description: ...
+- Fix: ...
+```
+
+### 7. async-safety-auditor
+
+**Scope:** Async/sync boundary violations that cause runtime crashes or deadlocks
+
+**Model:** Sonnet
+
+**When to use:**
+- After code-implementer delivers modules that mix sync and async code
+- When project uses LangGraph, httpx async, or any async framework
+- After refactoring sync code to async or vice versa
+
+**What it checks:**
+
+| Check | Description | Severity |
+|-------|-------------|----------|
+| **`asyncio.run()` in async context** | Calling `asyncio.run()` from within a function already running inside an event loop (e.g., LangGraph nodes, async handlers) — causes `RuntimeError: This event loop is already running` | CRITICAL |
+| **Missing `await`** | Calling a coroutine without `await`, resulting in a `RuntimeWarning` and the coroutine never executing | HIGH |
+| **Sync blocking in async** | Calling blocking I/O (`time.sleep`, `requests.get`, synchronous DB calls) inside an `async def` function, blocking the event loop | HIGH |
+| **Event loop nesting** | Using `nest_asyncio` or manual loop nesting as a workaround instead of proper async architecture | MEDIUM |
+
+**Verification method:**
+1. Find all `async def` functions and their call trees
+2. Grep for `asyncio.run()` inside async functions or functions called from async contexts
+3. Check for `await` on all coroutine calls
+4. Find sync blocking calls (`time.sleep`, `requests.`, `open(`) inside `async def` bodies
+5. Detect `nest_asyncio.apply()` usage
+
+**PASS/FAIL criteria:**
+- **PASS:** 0 CRITICAL + 0 HIGH findings
+- **FAIL:** Any CRITICAL or HIGH finding (blocking)
+- **Warning (non-blocking):** MEDIUM findings (nest_asyncio) are logged but not blocking
+
+**Example invocation:**
+```python
+Task(
+    subagent_type="async-safety-auditor",
+    model="sonnet",
+    prompt="""Audit all async/sync boundary violations in the target project.
+
+Target project: `[TARGET_PROJECT]`
+
+Check for:
+1. asyncio.run() inside async contexts (graph nodes, async handlers)
+2. Missing await on coroutine calls
+3. Sync blocking calls (time.sleep, requests.get, open()) inside async def
+4. nest_asyncio or event loop nesting workarounds
+
+PASS criteria: 0 CRITICAL + 0 HIGH findings.
+
+Save your report to `.ignorar/production-reports/async-safety-auditor/phase-{N}/{TIMESTAMP}-phase-{N}-async-safety-auditor-{slug}.md`
+"""
+)
+```
+
+**Grep patterns for detection:**
+```bash
+# asyncio.run() in any Python file (then verify if caller is async)
+rg -n "asyncio\.run\(" --type py
+
+# Sync blocking in async functions
+rg -U "async def.*\n(.*\n)*?.*time\.sleep\(" --type py
+rg -U "async def.*\n(.*\n)*?.*requests\.(get|post|put|delete)\(" --type py
+
+# nest_asyncio usage
+rg -n "nest_asyncio" --type py
+```
+
+### 8. semantic-correctness-auditor
+
+**Scope:** Detects code that is syntactically valid and passes linters but is semantically wrong — the body does not match the stated intent.
+
+**Model:** Sonnet
+
+**When to use:**
+- After every code-implementer cycle (Wave 3, runs after Wave 1+2 complete)
+- Especially important for Pydantic models, exception handling, and adapter/port implementations
+- Critical for projects using stub-first development where stubs may never get filled in
+
+**What it checks:**
+
+| Check | Description | Severity |
+|-------|-------------|----------|
+| **No-op validators** | `@field_validator` / `@model_validator` / `@validator` body returns `v` or `values` without any condition, transformation, or side effect | HIGH |
+| **Hollow functions** | Function has a docstring describing behavior X but body is `pass`, `return None`, `return []`, `return {}`, or `...` (Ellipsis) | HIGH |
+| **Swallowed exceptions** | `except` branch that neither logs (structlog/logging), re-raises, nor stores the exception — silently drops errors | HIGH |
+| **Wrong fallback returns** | Function returns empty collection (`[]`, `{}`, `set()`) or sentinel value in `except` block when the caller expects real data, hiding failures instead of raising | MEDIUM |
+
+**Verification method:**
+1. Find all `@field_validator`, `@model_validator`, `@validator` decorated functions
+2. Parse their bodies — flag if they only contain `return v` / `return values` with no conditionals or transformations
+3. Find all functions with docstrings — compare docstring claims vs body (flag `pass`, `return None`, `...`)
+4. Find all `except` blocks — verify each one either logs, re-raises, or stores the exception
+5. Find `except` blocks that return empty collections — cross-reference with caller expectations
+
+**PASS/FAIL criteria:**
+- **PASS:** 0 semantic no-ops detected (0 HIGH findings)
+- **FAIL:** Any HIGH finding (blocking)
+- **Warning (non-blocking):** MEDIUM findings (wrong fallback returns) are logged but not blocking
+
+**Example invocation:**
+```python
+Task(
+    subagent_type="semantic-correctness-auditor",
+    model="sonnet",
+    prompt="""Audit all Python files for semantic correctness issues.
+
+Target project: `[TARGET_PROJECT]`
+
+Check for:
+1. @field_validator / @model_validator / @validator bodies that return v without any condition (no-op validators)
+2. Functions whose docstring describes behavior X but body does not implement X (returns empty/None/pass)
+3. except branches that silently swallow exceptions without logging or re-raising
+4. Fallback returns that should be errors (returning [] when real data was expected)
+
+PASS criteria: 0 semantic no-ops (0 HIGH findings).
+
+Save your report to `.ignorar/production-reports/semantic-correctness-auditor/phase-{N}/{TIMESTAMP}-phase-{N}-semantic-correctness-auditor-{slug}.md`
+"""
+)
+```
+
+**Grep patterns for detection:**
+```bash
+# No-op validators (return v unchanged)
+rg -n "@(field_validator|model_validator|validator)" -A 5 --type py | grep "return v\b"
+
+# Hollow functions (docstring + pass/return None)
+rg -U '"""[^"]+"""[\s\n]+(pass|return None|return \[\]|return \{\}|\.\.\.)' --type py
+
+# Swallowed exceptions
+rg -n "except.*:" -A 3 --type py | grep -E "(pass$|return None$|continue$)"
+
+# Wrong fallback returns in except blocks
+rg -U "except.*:[\s\n]+return \[\]" --type py
+```
+
+**Report structure:**
+```markdown
+# Semantic Correctness Auditor Report
+
+## Summary
+- Files scanned: N
+- Semantic no-ops found: N (H high, M medium)
+- Status: PASS / FAIL
+
+## Findings
+### [ID] [Severity] [Category] [Title]
+- File: path/to/file.py:line
+- Pattern: no-op-validator | hollow-function | swallowed-exception | wrong-fallback
+- Description: ...
+- Fix: ...
+
+## Statistics
+- No-op validators: N
+- Hollow functions: N
+- Swallowed exceptions: N
+- Wrong fallback returns: N
+```
 
 #### Idle State Management
 
@@ -332,3 +625,93 @@ Task(code-reviewer, ...) + Task(test-generator, ...)
 ### Cuando NO usar
 - Tareas con dependencias secuenciales (code-implementer → verificacion)
 - Contexto limitado (cada agente paralelo consume tokens independientes)
+
+## Wave 3 Verification Agents
+
+Specialized agents that target specific runtime safety concerns beyond standard code quality. These run on-demand (not every commit) when the codebase uses async frameworks.
+
+### async-safety-auditor
+
+**Purpose:** Detect `asyncio.run()` calls that are reachable from async contexts (LangGraph nodes, Streamlit handlers, FastAPI endpoints), which cause `RuntimeError: This event loop is already running` at runtime.
+
+| Agente | Cuándo | Qué verifica | Reporte | Modelo Recomendado |
+|--------|--------|--------------|---------|-------------------|
+| async-safety-auditor | After code-implementer touches async code, LangGraph nodes, or Streamlit handlers | `asyncio.run()` reachability from async contexts | ~500+ líneas (flexible) | Sonnet |
+
+#### What It Checks
+
+1. **Find every `asyncio.run()` call** in the codebase via grep/AST scan
+2. **Identify the runtime context** of each call site:
+   - **LangGraph** — nodes registered in the graph are invoked within an async event loop
+   - **Streamlit** — runs its own async event loop; `asyncio.run()` inside handlers will crash
+   - **FastAPI** — async endpoints and dependencies run inside uvicorn's event loop
+   - **CLI (`__main__`, `typer`, `click`)** — sync context; `asyncio.run()` is safe here
+3. **Trace async reachability** — check if a sync function containing `asyncio.run()` is:
+   - Registered as a LangGraph node (via `graph.add_node()` or `StateGraph` registration)
+   - Called from an `async def` function (direct or transitive)
+   - Used as a FastAPI dependency or endpoint
+   - Invoked from a Streamlit callback
+4. **Flag `nest_asyncio`** usage as a workaround (not a fix) — it masks the underlying design issue and can cause subtle bugs with task cancellation and exception propagation
+5. **Recommend conversion** to `async def` + `await` pattern for all flagged call sites
+
+#### PASS/FAIL Criteria
+
+| Criteria | PASS | FAIL |
+|----------|------|------|
+| `asyncio.run()` in async-reachable paths | 0 occurrences | Any occurrence |
+| `nest_asyncio.apply()` usage | 0 occurrences (WARNING if found) | N/A (non-blocking, but logged as HIGH warning) |
+
+**PASS:** 0 `asyncio.run()` calls reachable from any async context (LangGraph, Streamlit, FastAPI).
+**FAIL:** Any `asyncio.run()` call that can be reached from an async runtime context.
+
+#### When to Use
+
+- After implementing or modifying LangGraph nodes
+- After adding Streamlit handlers that call domain logic
+- After integrating FastAPI endpoints with existing sync services
+- During Phase 7 (Human-in-the-Loop / Streamlit) and Phase 8 (Output) of SIOPV
+- Any time `asyncio.run()` or `nest_asyncio` appears in a diff
+
+#### Example Invocation
+
+```python
+Task(
+    subagent_type="async-safety-auditor",
+    model="sonnet",
+    prompt="""Audit async safety in target project.
+
+Target project: `[TARGET_PROJECT]`
+
+Steps:
+1. Grep for all `asyncio.run()` calls across the codebase
+2. Grep for all `nest_asyncio` imports/usage
+3. Identify LangGraph node registrations (graph.add_node, StateGraph)
+4. Identify Streamlit handlers and FastAPI endpoints
+5. For each `asyncio.run()` call, trace whether it is reachable from:
+   - A function registered as a LangGraph node
+   - An async def function (direct or transitive caller)
+   - A Streamlit callback or FastAPI endpoint/dependency
+6. Flag each reachable `asyncio.run()` as FAIL with:
+   - File path and line number
+   - The async context that reaches it (LangGraph/Streamlit/FastAPI)
+   - Recommended fix (convert to async def + await)
+7. Flag any `nest_asyncio.apply()` as HIGH warning (workaround, not fix)
+
+Save your report to `.ignorar/production-reports/async-safety-auditor/phase-{N}/{TIMESTAMP}-phase-{N}-async-safety-auditor-{slug}.md`
+"""
+)
+```
+
+#### Example Findings
+
+```
+FAIL: src/application/orchestration/nodes/dlp_node.py:45
+  asyncio.run(sanitize_async(...))
+  Context: Function `dlp_node` registered as LangGraph node via graph.add_node("dlp", dlp_node)
+  Fix: Convert `dlp_node` to `async def dlp_node(state)` and replace `asyncio.run()` with `await`
+
+WARNING: src/infrastructure/adapters/llm/client.py:12
+  import nest_asyncio; nest_asyncio.apply()
+  Issue: nest_asyncio masks event loop conflicts; does not fix the root cause
+  Fix: Remove nest_asyncio, convert callers to async def + await
+```

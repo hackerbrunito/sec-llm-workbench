@@ -1101,7 +1101,7 @@ Phase 3: Programmatic Tool Schemas
 
 ## Deployment Checklist
 
-- [ ] `.claude/rules/agent-tool-schemas.md` created
+- [ ] `.claude/docs/agent-tool-schemas.md` created
 - [ ] `.claude/skills/verify/SKILL.md` updated with tool schema reference
 - [ ] All 5 agent prompts updated with schema examples
 - [ ] All JSON schemas validated

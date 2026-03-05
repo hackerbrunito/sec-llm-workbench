@@ -26,6 +26,9 @@
 | **security-auditor (MEDIUM)** | Security | Warning level | N/A | ❌ No | security-auditor |
 | **hallucination-detector** | Correctness | 0 hallucinations | Any hallucination | ✅ Yes | hallucination-detector |
 | **code-reviewer score** | Code Quality | >= 9.0/10 | < 9.0/10 | ✅ Yes | code-reviewer |
+| **integration-tracer** | Integration | 0 integration gaps | Any gap | ✅ Yes | integration-tracer |
+| **async-safety-auditor** | Async Safety | 0 asyncio.run() in async paths | Any violation | ✅ Yes | async-safety-auditor |
+| **semantic-correctness-auditor** | Semantic Correctness | 0 semantic no-ops | Any no-op | ✅ Yes | semantic-correctness-auditor |
 
 ---
 
@@ -130,6 +133,55 @@
 
 **Pass:** All tests pass + coverage >= 80%
 **Fail:** Any test fails OR coverage < 80%
+
+---
+
+### 6. integration-tracer
+
+**Scope:** End-to-end execution path integrity — from entry points to leaf implementations
+
+**Integration Gaps:**
+- Hollow entry points (CLI/graph nodes terminating in stubs)
+- Parameter dropping (accepted but not forwarded)
+- Dead exports (in `__all__` but never imported in execution paths)
+- Unreachable code (defined but never called from any entry point)
+- Broken call chains (intermediate functions not calling expected next step)
+
+**Pass:** 0 CRITICAL + 0 HIGH integration gaps
+**Fail:** Any CRITICAL or HIGH finding
+**Warning (Non-blocking):** MEDIUM findings (unreachable code) allowed
+
+---
+
+### 7. async-safety-auditor
+
+**Scope:** Async/sync boundary violations that cause runtime crashes or deadlocks
+
+**Violations:**
+- `asyncio.run()` inside async contexts (causes `RuntimeError: This event loop is already running`)
+- Missing `await` on coroutine calls (coroutine never executes)
+- Sync blocking calls (`time.sleep`, `requests.get`, synchronous DB) inside `async def`
+- Event loop nesting via `nest_asyncio` (workaround, not proper fix)
+
+**Pass:** 0 CRITICAL + 0 HIGH findings (0 asyncio.run() in async paths)
+**Fail:** Any CRITICAL or HIGH finding
+**Warning (Non-blocking):** MEDIUM findings (nest_asyncio usage) allowed
+
+---
+
+### 8. semantic-correctness-auditor
+
+**Scope:** Code that is syntactically valid and passes linters but is semantically wrong — body does not match stated intent
+
+**Semantic No-ops:**
+- No-op validators: `@field_validator` / `@model_validator` / `@validator` body returns `v` unchanged without any condition or transformation
+- Hollow functions: docstring describes behavior X but body is `pass`, `return None`, `return []`, `return {}`, or `...`
+- Swallowed exceptions: `except` branch that neither logs, re-raises, nor stores the exception
+- Wrong fallback returns: `except` block returns empty collection (`[]`, `{}`) when caller expects real data
+
+**Pass:** 0 semantic no-ops (0 HIGH findings)
+**Fail:** Any HIGH finding
+**Warning (Non-blocking):** MEDIUM findings (wrong fallback returns) allowed
 
 ---
 

@@ -23,7 +23,7 @@ Limpia markers en `.build/checkpoints/pending/`
 
 ## Verification Thresholds
 
-**→ See `.claude/rules/verification-thresholds.md` for complete threshold definitions**
+**→ Read `.claude/docs/verification-thresholds.md` before checking thresholds (on-demand, not auto-loaded)**
 | best-practices-enforcer | 0 violations | Any violation |
 | security-auditor | 0 CRITICAL/HIGH | Any CRITICAL/HIGH (MEDIUM = warning) |
 | hallucination-detector | 0 hallucinations | Any hallucination |

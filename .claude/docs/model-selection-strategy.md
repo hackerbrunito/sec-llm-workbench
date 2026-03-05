@@ -599,7 +599,7 @@ Configure:
 - **Master Remediation Plan:** `.ignorar/2026-02-08-claude-config-sota-audit-and-remediation-plan--delete-after-successful-implementation/team4-master-plan/MASTER-REMEDIATION-PLAN.md` (Lines 759-811)
 - **Local Preferences:** `.claude/CLAUDE.local.md` (Lines 11-14)
 - **Agent Definitions:** `.claude/workflow/04-agents.md`
-- **Cost Analysis:** `.claude/rules/agent-tool-schemas.md` (Phase 3 token impact)
+- **Cost Analysis:** `.claude/docs/agent-tool-schemas.md` (Phase 3 token impact)
 
 ---
 
