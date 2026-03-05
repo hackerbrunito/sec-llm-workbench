@@ -1,7 +1,7 @@
 ---
 name: verify
 disable-model-invocation: true
-description: "Ejecuta los 8 agentes mandatorios de verificacion (Wave 1+2+3) y limpia markers pendientes"
+description: "Ejecuta los 11 agentes mandatorios de verificacion (Wave 1+2+3) y limpia markers pendientes"
 context: fork
 agent: general-purpose
 argument-hint: "[--fix]"
@@ -45,7 +45,31 @@ Uses Anthropic Batch API for non-interactive verification:
 ### 1. Identificar Archivos Pendientes
 
 ```bash
-ls $CLAUDE_PROJECT_DIR/.build/checkpoints/pending/ 2>/dev/null
+# VALIDATION: Ensure active-project is set and valid before proceeding
+TARGET=$(cat .build/active-project 2>/dev/null || echo "")
+TARGET="${TARGET/#\~/$HOME}"  # expand ~ to absolute path
+if [ -z "$TARGET" ] || [ ! -d "$TARGET" ]; then
+    echo "ERROR: .build/active-project is missing or points to non-existent directory: '$TARGET'"
+    echo "Fix: echo '~/yourproject/' > .build/active-project"
+    exit 1
+fi
+if [ ! -f "$TARGET/pyproject.toml" ]; then
+    echo "ERROR: Target project has no pyproject.toml at: $TARGET"
+    echo "This does not look like a valid Python project."
+    exit 1
+fi
+echo "Active project validated: $TARGET"
+```
+
+```bash
+# post-code.sh writes markers to the TARGET project, not the meta-project
+TARGET=$(cat .build/active-project 2>/dev/null || echo "")
+TARGET="${TARGET/#\~/$HOME}"  # expand ~ to absolute path
+if [ -n "$TARGET" ] && [ -d "$TARGET" ]; then
+    ls "$TARGET/.build/checkpoints/pending/" 2>/dev/null
+else
+    ls $CLAUDE_PROJECT_DIR/.build/checkpoints/pending/ 2>/dev/null
+fi
 ```
 
 Si no hay archivos pendientes: "No hay archivos pendientes de verificacion"
@@ -55,7 +79,7 @@ Si no hay archivos pendientes: "No hay archivos pendientes de verificacion"
 TODOS deben ejecutarse en paralelo (3 waves). Si alguno falla, PARAR y reportar.
 
 **Orchestration Reference:** `.claude/scripts/orchestrate-parallel-verification.py`
-- Wave-based parallel execution (Wave 1: 3 agents ~7 min, Wave 2: 2 agents ~5 min, Wave 3: 3 agents ~7 min)
+- Wave-based parallel execution (Wave 1: 3 agents ~7 min, Wave 2: 2 agents ~5 min, Wave 3: 6 agents ~7 min)
 - Threshold validation per `.claude/docs/verification-thresholds.md`
 - JSONL logging to `.build/logs/agents/YYYY-MM-DD.jsonl`
 - Automated pending marker cleanup on success
@@ -215,7 +239,15 @@ Wait for both to complete.
 
 #### Wave 3 (Paralelo - ~7 min max)
 
-Submit 3 agents in parallel after Wave 2 completes:
+**Before submitting Wave 3 agents, resolve substitution values:**
+```bash
+TARGET_PROJECT=$(cat .build/active-project)  # e.g. ~/siopv/
+PHASE_N=$(cat .build/current-phase)          # e.g. 6
+TIMESTAMP=$(date +%Y-%m-%d-%H%M%S)
+```
+Substitute `[TARGET_PROJECT]`, `{N}`, and `{TIMESTAMP}` in all six prompts below before calling Task().
+
+Submit 6 agents in parallel after Wave 2 completes:
 
 **integration-tracer:**
 ```
@@ -227,7 +259,7 @@ Target project: [TARGET_PROJECT]
 
 PASS criteria: 0 CRITICAL + 0 HIGH findings.
 
-Save your report to `.ignorar/production-reports/integration-tracer/phase-{N}/{TIMESTAMP}-phase-{N}-integration-tracer-{slug}.md`
+Save your report to `.ignorar/production-reports/integration-tracer/phase-{N}/{TIMESTAMP}-phase-{N}-integration-tracer-full-trace.md`
 """)
 ```
 
@@ -241,7 +273,7 @@ Target project: [TARGET_PROJECT]
 
 PASS criteria: 0 CRITICAL + 0 HIGH findings.
 
-Save your report to `.ignorar/production-reports/async-safety-auditor/phase-{N}/{TIMESTAMP}-phase-{N}-async-safety-auditor-{slug}.md`
+Save your report to `.ignorar/production-reports/async-safety-auditor/phase-{N}/{TIMESTAMP}-phase-{N}-async-safety-auditor-async-audit.md`
 """)
 ```
 
@@ -257,11 +289,64 @@ Target project: [TARGET_PROJECT]
 
 PASS criteria: 0 semantic no-ops (0 HIGH findings).
 
-Save your report to `.ignorar/production-reports/semantic-correctness-auditor/phase-{N}/{TIMESTAMP}-phase-{N}-semantic-correctness-auditor-{slug}.md`
+Save your report to `.ignorar/production-reports/semantic-correctness-auditor/phase-{N}/{TIMESTAMP}-phase-{N}-semantic-correctness-auditor-semantic-scan.md`
 """)
 ```
 
-Wait for all 3 to complete.
+**smoke-test-runner:**
+```
+Task(subagent_type="smoke-test-runner", prompt="""Execute end-to-end pipeline smoke test with synthetic CVE input.
+Verify the pipeline runs from START to END without crashing and output contains all required fields.
+
+Target project: [TARGET_PROJECT]
+
+PASS criteria: Pipeline runs end-to-end without exception, output contains classification, severity, and cve_id fields.
+
+Save your report to `.ignorar/production-reports/smoke-test-runner/phase-{N}/{TIMESTAMP}-phase-{N}-smoke-test-runner-smoke-test.md`
+""")
+```
+
+**config-validator:**
+```
+Task(subagent_type="config-validator", prompt="""Validate environment variable documentation and docker service consistency.
+Check that all settings.* and os.getenv() references have corresponding entries in .env.example.
+Check that docker-compose.yml service names match what the code expects.
+
+Target project: [TARGET_PROJECT]
+
+PASS criteria: All required env vars documented in .env.example, all docker service references consistent.
+
+Save your report to `.ignorar/production-reports/config-validator/phase-{N}/{TIMESTAMP}-phase-{N}-config-validator-config-check.md`
+""")
+```
+
+**regression-guard:**
+```
+Task(subagent_type="regression-guard", prompt="""Check for cross-phase regressions in recently changed files.
+Use git diff HEAD~1 to find changed files, build reverse dependency map, run pytest on affected modules.
+Flag any previously-passing test that now fails.
+
+Target project: [TARGET_PROJECT]
+
+PASS criteria: All previously-passing tests in reverse-dependent modules still pass (0 FAILED, 0 ERROR).
+
+Save your report to `.ignorar/production-reports/regression-guard/phase-{N}/{TIMESTAMP}-phase-{N}-regression-guard-regression-check.md`
+""")
+```
+
+Wait for all 6 to complete.
+
+**Wave 3 Timeout and Retry Policy:**
+- If a Wave 3 agent does not produce its report file within 10 minutes:
+  1. Mark that agent as TIMEOUT-FAIL
+  2. Continue with the remaining Wave 3 agents — do NOT stop the wave
+  3. Report TIMEOUT-FAIL in the final verdict — do not silently skip it
+  4. Retry once after all Wave 3 agents complete if time permits
+
+**After each Wave 3 agent completes, verify its report file was created:**
+- Check that the expected report path exists on disk
+- If the report file is missing: mark that agent as FAIL with reason "report file not found"
+- A Wave 3 agent that runs but produces no report is treated as FAILED
 
 **Total with Wave 3: ~19 minutes** (Wave 1: ~7 min + Wave 2: ~5 min + Wave 3: ~7 min)
 
@@ -269,6 +354,9 @@ Wait for all 3 to complete.
 - integration-tracer: PASS = 0 CRITICAL + 0 HIGH
 - async-safety-auditor: PASS = 0 CRITICAL + 0 HIGH
 - semantic-correctness-auditor: PASS = 0 HIGH findings
+- smoke-test-runner: PASS = 0 crashes, required fields present (classification, severity, cve_id)
+- config-validator: PASS = all env vars documented in .env.example, all docker service references consistent
+- regression-guard: PASS = 0 regressions in reverse-dependent modules (0 FAILED, 0 ERROR)
 
 ## Tool Schema Invocation (Phase 3 - Programmatic Tool Calling)
 
@@ -396,7 +484,14 @@ Si el agente encuentra hallazgos, también registrar en `.build/logs/decisions/Y
 ### 4. Si TODOS Pasan, Limpiar Markers
 
 ```bash
-rm -rf $CLAUDE_PROJECT_DIR/.build/checkpoints/pending/*
+# Clear markers from the TARGET project (where post-code.sh writes them)
+TARGET=$(cat .build/active-project 2>/dev/null || echo "")
+TARGET="${TARGET/#\~/$HOME}"  # expand ~ to absolute path
+if [ -n "$TARGET" ] && [ -d "$TARGET" ]; then
+    rm -rf "$TARGET/.build/checkpoints/pending/"*
+else
+    rm -rf $CLAUDE_PROJECT_DIR/.build/checkpoints/pending/*
+fi
 ```
 
 ### 5. Verificaciones Adicionales
