@@ -223,10 +223,31 @@ Target project: `[TARGET_PROJECT]`
 Save your report to `.ignorar/production-reports/circular-import-detector/phase-{N}/{TIMESTAMP}-phase-{N}-circular-import-detector-{slug}.md`
 """
 )
-```
-**Wait for all 8 to complete** (~7 min max)
+Task(
+    subagent_type="import-resolver",
+    model="sonnet",
+    prompt="""Detect all unresolvable imports in the target project.
 
-**Total with Wave 3: ~19 minutes** (Wave 1: ~7 min + Wave 2: ~5 min + Wave 3: ~7 min)
+Target project: `[TARGET_PROJECT]`
+
+Steps:
+1. Read .build/active-project to find the target project path
+2. Walk all .py files under src/ using ast to extract absolute import statements
+3. For each import, run: uv run python3 -c "import <module>" in the target project
+4. For from-imports, also check: uv run python3 -c "from <module> import <name>"
+5. Skip: relative imports, TYPE_CHECKING blocks, try/except ImportError blocks
+6. Flag any ModuleNotFoundError or ImportError as CRITICAL
+7. Deduplicate findings by (module, name)
+
+PASS criteria: 0 unresolvable absolute imports.
+
+Save your report to `.ignorar/production-reports/import-resolver/phase-{N}/{TIMESTAMP}-phase-{N}-import-resolver-{slug}.md`
+"""
+)
+```
+**Wait for all 9 to complete** (~7 min max)
+
+**Total with Wave 3: ~19 minutes** (Wave 1: ~7 min + Wave 2: ~5 min + Wave 3: ~7 min, 9 agents)
 
 ## Wave 3 Verification Agents
 
@@ -822,6 +843,86 @@ Files involved:
 Fix: Break cycle by extracting shared dependency to a new module, or use lazy imports.
 ```
 
+### 14. import-resolver
+
+**Scope:** Runtime import resolution — detects imports that will cause `ImportError` at startup
+
+**Model:** Sonnet
+
+**When to use:**
+- After any code-implementer cycle that adds new modules, installs new dependencies, or refactors package structure
+- When adding new `from X import Y` statements that reference internal or external modules
+- After changing `pyproject.toml` dependencies (a removed dependency may leave broken imports)
+- During any Phase verification (runs as Wave 3 agent automatically)
+
+**What it checks:**
+
+| Check | Description | Severity |
+|-------|-------------|----------|
+| **Unresolvable module** | `import X` where X cannot be imported in the target project's venv | CRITICAL |
+| **Missing name** | `from X import Y` where X exists but Y is not exported by X | CRITICAL |
+
+**What it skips:**
+- Relative imports (`.module`, `..module`) — circular-import-detector handles those
+- `TYPE_CHECKING` blocks — not executed at runtime
+- `try/except ImportError` blocks — intentionally conditional, safe to ignore
+- Star imports (`from X import *`) — cannot be statically resolved
+
+**Verification method:**
+1. Walk `src/` with `ast` to extract all absolute import statements
+2. For each `import X`: run `uv run python3 -c "import X"` in target project
+3. For each `from X import Y`: run `uv run python3 -c "from X import Y"` in target project
+4. Capture stdout/stderr, flag `ModuleNotFoundError` / `ImportError` as CRITICAL
+5. Deduplicate by (module, name) to avoid redundant reports
+
+**PASS/FAIL criteria:**
+- **PASS:** 0 unresolvable absolute imports
+- **FAIL:** Any `ModuleNotFoundError` or `ImportError` outside safe blocks
+
+**Example invocation:**
+```python
+Task(
+    subagent_type="import-resolver",
+    model="sonnet",
+    prompt="""Detect all unresolvable imports in the target project.
+
+Target project: `[TARGET_PROJECT]`
+
+Walk src/ with ast, extract all absolute imports, resolve each with uv run python3.
+Skip relative imports, TYPE_CHECKING blocks, and try/except ImportError blocks.
+Flag any ModuleNotFoundError or ImportError as CRITICAL.
+
+PASS criteria: 0 unresolvable absolute imports.
+
+Save your report to `.ignorar/production-reports/import-resolver/phase-{N}/{TIMESTAMP}-phase-{N}-import-resolver-{slug}.md`
+"""
+)
+```
+
+**Report structure:**
+```markdown
+# Import Resolver Report - Phase [N]
+
+## Summary
+- Files scanned: N
+- Unique imports checked: N
+- Unresolvable imports found: N
+- Status: PASS / FAIL
+
+## Findings
+### [IR-001] CRITICAL Unresolvable Import
+- Import: `from X import Y` or `import X`
+- Found in: path/to/file.py:line (and N other files)
+- Error: ModuleNotFoundError: No module named 'X'
+- Fix: Install X via `uv add X` or correct the import path
+
+## Statistics
+- Absolute imports checked: N
+- Relative imports skipped: N
+- TYPE_CHECKING blocks skipped: N
+- try/except ImportError blocks skipped: N
+```
+
 #### Idle State Management
 
 **Note:** Teammates go idle after every turn - this is normal behavior.
@@ -1043,6 +1144,7 @@ Specialized agents that target specific runtime safety concerns beyond standard 
 | regression-guard | Every /verify run (Wave 3) | Cross-phase regression detection | ~500+ líneas (flexible) | Sonnet |
 | dependency-scanner | Every /verify run (Wave 3) | CVE scan of all dependencies | ~300+ lines | Sonnet |
 | circular-import-detector | Every /verify run (Wave 3) | Circular import cycle detection | ~300+ lines | Sonnet |
+| import-resolver | After code-implementer adds/removes modules or deps | Unresolvable imports (`import X`, `from X import Y`) | ~300+ lines | Sonnet |
 
 ### async-safety-auditor
 
