@@ -32,6 +32,8 @@
 | **smoke-test-runner** | Runtime Verification | 0 crashes, all required fields present | Any crash, timeout, or missing field | ✅ Yes | smoke-test-runner |
 | **config-validator** | Configuration | All env vars documented, services consistent | Any undocumented env var or mismatched service | ✅ Yes | config-validator |
 | **regression-guard** | Regression | 0 previously-passing tests failing | Any test regression in affected modules | ✅ Yes | regression-guard |
+| **dependency-scanner** | Dependency Security | 0 CRITICAL CVEs, 0 HIGH CVEs | Any CRITICAL or HIGH CVE in dependencies | ✅ Yes | dependency-scanner |
+| **circular-import-detector** | Import Graph | 0 circular import cycles | Any circular import cycle detected | ✅ Yes | circular-import-detector |
 
 ---
 
@@ -231,6 +233,37 @@
 
 **Pass:** 0 FAILED, 0 ERROR in all reverse-dependent test modules
 **Fail:** Any FAILED or ERROR in affected test modules
+
+---
+
+### 12. dependency-scanner
+
+**Scope:** Known CVE detection in Python package dependencies via uv pip audit
+
+**Checks:**
+- Runs `uv pip audit` against all packages installed in the target project virtual environment
+- Falls back to `pip-audit --format=json` if uv pip audit is unavailable
+- Reports CRITICAL (CVSS >= 9.0), HIGH (CVSS 7.0-8.9), MEDIUM, and LOW findings
+- MEDIUM and LOW are non-blocking warnings
+
+**Pass:** 0 CRITICAL CVEs, 0 HIGH CVEs in any dependency
+**Fail:** Any CRITICAL or HIGH severity CVE in any installed package
+
+---
+
+### 13. circular-import-detector
+
+**Scope:** Python circular import cycle detection using AST-based import graph analysis
+
+**Checks:**
+- Parses all .py files in src/ using Python's `ast` module
+- Builds a directed import graph (module A -> modules that A imports)
+- Runs DFS cycle detection on the full graph
+- Reports each cycle as a chain: module.a -> module.b -> module.c -> module.a
+- Provides exact import lines in each file that form the cycle
+
+**Pass:** 0 circular import cycles detected in src/
+**Fail:** Any circular import cycle detected (even one causes potential ImportError at runtime)
 
 ---
 
