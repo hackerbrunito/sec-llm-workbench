@@ -1,7 +1,7 @@
 ---
 name: verify
 disable-model-invocation: true
-description: "Ejecuta los 11 agentes mandatorios de verificacion (Wave 1+2+3) y limpia markers pendientes"
+description: "Ejecuta los 13 agentes mandatorios de verificacion (Wave 1+2+3) y limpia markers pendientes"
 context: fork
 agent: general-purpose
 argument-hint: "[--fix]"
@@ -79,7 +79,7 @@ Si no hay archivos pendientes: "No hay archivos pendientes de verificacion"
 TODOS deben ejecutarse en paralelo (3 waves). Si alguno falla, PARAR y reportar.
 
 **Orchestration Reference:** `.claude/scripts/orchestrate-parallel-verification.py`
-- Wave-based parallel execution (Wave 1: 3 agents ~7 min, Wave 2: 2 agents ~5 min, Wave 3: 6 agents ~7 min)
+- Wave-based parallel execution (Wave 1: 3 agents ~7 min, Wave 2: 2 agents ~5 min, Wave 3: 8 agents ~7 min)
 - Threshold validation per `.claude/docs/verification-thresholds.md`
 - JSONL logging to `.build/logs/agents/YYYY-MM-DD.jsonl`
 - Automated pending marker cleanup on success
@@ -245,9 +245,9 @@ TARGET_PROJECT=$(cat .build/active-project)  # e.g. ~/siopv/
 PHASE_N=$(cat .build/current-phase)          # e.g. 6
 TIMESTAMP=$(date +%Y-%m-%d-%H%M%S)
 ```
-Substitute `[TARGET_PROJECT]`, `{N}`, and `{TIMESTAMP}` in all six prompts below before calling Task().
+Substitute `[TARGET_PROJECT]`, `{N}`, and `{TIMESTAMP}` in all eight prompts below before calling Task().
 
-Submit 6 agents in parallel after Wave 2 completes:
+Submit 8 agents in parallel after Wave 2 completes:
 
 **integration-tracer:**
 ```
@@ -334,7 +334,33 @@ Save your report to `.ignorar/production-reports/regression-guard/phase-{N}/{TIM
 """)
 ```
 
-Wait for all 6 to complete.
+**dependency-scanner:**
+```
+Task(subagent_type="dependency-scanner", prompt="""Scan all project dependencies for known CVEs.
+Check pyproject.toml packages against vulnerability databases using uv pip audit.
+
+Target project: [TARGET_PROJECT]
+
+PASS criteria: 0 CRITICAL CVEs, 0 HIGH CVEs in any dependency.
+
+Save your report to `.ignorar/production-reports/dependency-scanner/phase-{N}/{TIMESTAMP}-phase-{N}-dependency-scanner-audit.md`
+""")
+```
+
+**circular-import-detector:**
+```
+Task(subagent_type="circular-import-detector", prompt="""Detect circular imports in all Python source files.
+Build full import graph using AST analysis and run DFS cycle detection.
+
+Target project: [TARGET_PROJECT]
+
+PASS criteria: 0 circular import cycles in src/.
+
+Save your report to `.ignorar/production-reports/circular-import-detector/phase-{N}/{TIMESTAMP}-phase-{N}-circular-import-detector-scan.md`
+""")
+```
+
+Wait for all 8 to complete.
 
 **Wave 3 Timeout and Retry Policy:**
 - If a Wave 3 agent does not produce its report file within 10 minutes:
@@ -357,6 +383,8 @@ Wait for all 6 to complete.
 - smoke-test-runner: PASS = 0 crashes, required fields present (classification, severity, cve_id)
 - config-validator: PASS = all env vars documented in .env.example, all docker service references consistent
 - regression-guard: PASS = 0 regressions in reverse-dependent modules (0 FAILED, 0 ERROR)
+- dependency-scanner: PASS = 0 CRITICAL + 0 HIGH CVEs in dependencies
+- circular-import-detector: PASS = 0 circular import cycles
 
 ## Tool Schema Invocation (Phase 3 - Programmatic Tool Calling)
 
@@ -500,7 +528,7 @@ fi
 uv run ruff format src tests --check
 uv run ruff check src tests
 uv run mypy src
-uv run pytest tests/ -v
+uv run pytest tests/ -v --cov src --cov-report=term-missing --cov-fail-under=75
 ```
 
 ### Con --fix
