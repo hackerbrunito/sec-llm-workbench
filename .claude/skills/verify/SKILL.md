@@ -1,7 +1,7 @@
 ---
 name: verify
 disable-model-invocation: true
-description: "Ejecuta los 13 agentes mandatorios de verificacion (Wave 1+2+3) y limpia markers pendientes"
+description: "Ejecuta los 14 agentes mandatorios de verificacion (Wave 1+2+3) y limpia markers pendientes"
 context: fork
 agent: general-purpose
 argument-hint: "[--fix]"
@@ -42,6 +42,20 @@ Uses Anthropic Batch API for non-interactive verification:
 
 ## Comportamiento
 
+### Pre-Check: Secrets in Git History
+
+Run the secrets history scan automatically on every /verify invocation:
+
+```bash
+TARGET=$(cat .build/active-project 2>/dev/null || echo "")
+TARGET="${TARGET/#\~/$HOME}"
+bash .claude/scripts/scan-git-history-for-secrets.sh "$TARGET" 2>/dev/null || true
+```
+
+This scan checks git history for accidentally committed secrets (API keys, tokens, passwords).
+It runs in non-blocking mode (`|| true`) — a finding is logged as WARNING but does not
+halt the verification pipeline. Review the output manually if warnings are reported.
+
 ### 1. Identificar Archivos Pendientes
 
 ```bash
@@ -79,7 +93,7 @@ Si no hay archivos pendientes: "No hay archivos pendientes de verificacion"
 TODOS deben ejecutarse en paralelo (3 waves). Si alguno falla, PARAR y reportar.
 
 **Orchestration Reference:** `.claude/scripts/orchestrate-parallel-verification.py`
-- Wave-based parallel execution (Wave 1: 3 agents ~7 min, Wave 2: 2 agents ~5 min, Wave 3: 8 agents ~7 min)
+- Wave-based parallel execution (Wave 1: 3 agents ~7 min, Wave 2: 2 agents ~5 min, Wave 3: 9 agents ~7 min)
 - Threshold validation per `.claude/docs/verification-thresholds.md`
 - JSONL logging to `.build/logs/agents/YYYY-MM-DD.jsonl`
 - Automated pending marker cleanup on success
@@ -247,7 +261,7 @@ TIMESTAMP=$(date +%Y-%m-%d-%H%M%S)
 ```
 Substitute `[TARGET_PROJECT]`, `{N}`, and `{TIMESTAMP}` in all eight prompts below before calling Task().
 
-Submit 8 agents in parallel after Wave 2 completes:
+Submit 9 agents in parallel after Wave 2 completes:
 
 **integration-tracer:**
 ```
@@ -360,7 +374,28 @@ Save your report to `.ignorar/production-reports/circular-import-detector/phase-
 """)
 ```
 
-Wait for all 8 to complete.
+**import-resolver:**
+```
+Task(subagent_type="import-resolver", prompt="""Detect all unresolvable imports in the target project.
+
+Target project: [TARGET_PROJECT]
+
+Steps:
+1. Read .build/active-project to find the target project path
+2. Walk all .py files under src/ using ast to extract absolute import statements
+3. For each import, run: uv run python3 -c "import <module>" in the target project
+4. For from-imports, also check: uv run python3 -c "from <module> import <name>"
+5. Skip: relative imports, TYPE_CHECKING blocks, try/except ImportError blocks
+6. Flag any ModuleNotFoundError or ImportError as CRITICAL
+7. Deduplicate findings by (module, name)
+
+PASS criteria: 0 unresolvable absolute imports.
+
+Save your report to `.ignorar/production-reports/import-resolver/phase-{N}/{TIMESTAMP}-phase-{N}-import-resolver-scan.md`
+""")
+```
+
+Wait for all 9 to complete.
 
 **Wave 3 Timeout and Retry Policy:**
 - If a Wave 3 agent does not produce its report file within 10 minutes:
@@ -385,6 +420,7 @@ Wait for all 8 to complete.
 - regression-guard: PASS = 0 regressions in reverse-dependent modules (0 FAILED, 0 ERROR)
 - dependency-scanner: PASS = 0 CRITICAL + 0 HIGH CVEs in dependencies
 - circular-import-detector: PASS = 0 circular import cycles
+- import-resolver: PASS = 0 unresolvable absolute imports
 
 ## Tool Schema Invocation (Phase 3 - Programmatic Tool Calling)
 
@@ -528,8 +564,20 @@ fi
 uv run ruff format src tests --check
 uv run ruff check src tests
 uv run mypy src
-uv run pytest tests/ -v --cov src --cov-report=term-missing --cov-fail-under=75
+uv run pytest tests/ -v --cov src --cov-report=term-missing --cov-report=xml --cov-fail-under=75
 ```
+
+#### Per-Module Coverage Floor (50% minimum)
+
+After running pytest with coverage, enforce the per-module floor:
+
+```bash
+TARGET=$(cat .build/active-project 2>/dev/null | sed "s|~|$HOME|g")
+python3 /Users/bruno/sec-llm-workbench/.claude/scripts/check-module-coverage.py "$TARGET"
+```
+
+PASS: All modules meet 50% floor.
+FAIL: Any module below 50% — fix by adding tests for that module before proceeding.
 
 ### Con --fix
 
