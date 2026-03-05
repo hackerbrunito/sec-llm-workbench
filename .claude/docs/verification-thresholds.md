@@ -3,7 +3,7 @@
 
 **Purpose:** Centralized definition of all verification pass/fail criteria across the project.
 
-**Last Updated:** 2026-02-08
+**Last Updated:** 2026-03-05
 **Status:** Active
 **Referenced by:**
 - `.claude/workflow/05-before-commit.md` (before-commit checklist)
@@ -29,6 +29,9 @@
 | **integration-tracer** | Integration | 0 integration gaps | Any gap | ✅ Yes | integration-tracer |
 | **async-safety-auditor** | Async Safety | 0 asyncio.run() in async paths | Any violation | ✅ Yes | async-safety-auditor |
 | **semantic-correctness-auditor** | Semantic Correctness | 0 semantic no-ops | Any no-op | ✅ Yes | semantic-correctness-auditor |
+| **smoke-test-runner** | Runtime Verification | 0 crashes, all required fields present | Any crash, timeout, or missing field | ✅ Yes | smoke-test-runner |
+| **config-validator** | Configuration | All env vars documented, services consistent | Any undocumented env var or mismatched service | ✅ Yes | config-validator |
+| **regression-guard** | Regression | 0 previously-passing tests failing | Any test regression in affected modules | ✅ Yes | regression-guard |
 
 ---
 
@@ -182,6 +185,52 @@
 **Pass:** 0 semantic no-ops (0 HIGH findings)
 **Fail:** Any HIGH finding
 **Warning (Non-blocking):** MEDIUM findings (wrong fallback returns) allowed
+
+---
+
+### 9. smoke-test-runner
+
+**Scope:** End-to-end pipeline execution with synthetic input — the only agent that actually runs the project
+
+**Runtime Checks:**
+- Pipeline imports cleanly (`uv run python -c "import [project]"`)
+- Pipeline runs start-to-end with CVE-2024-1234 without unhandled exception
+- Pipeline completes within 120 seconds (timeout = CRITICAL)
+- Output contains all required fields: `classification`/`category`, `severity`/`cvss_score`, `cve_id`/`id`
+
+**Pass:** Pipeline runs without exception, all required fields present
+**Fail:** Any unhandled exception, timeout, empty output, or missing required field
+
+---
+
+### 10. config-validator
+
+**Scope:** Environment variable documentation and Docker service consistency
+
+**Checks:**
+- All `settings.*` attribute accesses have corresponding entry in `.env.example`
+- All `os.getenv(` calls reference a var documented in `.env.example`
+- All `Settings` fields with no default are in `.env.example`
+- All Docker service names referenced in code exist in `docker-compose.yml`
+- All Docker service ports in code match `docker-compose.yml` definitions
+
+**Pass:** All required env vars documented, all docker service references consistent
+**Fail:** Any undocumented required env var OR any mismatched service name/port
+
+---
+
+### 11. regression-guard
+
+**Scope:** Cross-phase regression detection via reverse dependency analysis and targeted pytest
+
+**Checks:**
+- Uses `git diff HEAD~1 --name-only` to identify recently changed Python files
+- Builds reverse dependency map: which modules import from changed files
+- Runs pytest on test files corresponding to reverse-dependent modules only
+- Flags any test that was passing before and is now FAILED or ERROR
+
+**Pass:** 0 FAILED, 0 ERROR in all reverse-dependent test modules
+**Fail:** Any FAILED or ERROR in affected test modules
 
 ---
 
