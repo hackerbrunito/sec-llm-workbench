@@ -152,6 +152,39 @@ REPORT_PATH="${REPORT_DIR}/${TIMESTAMP}-phase-${PHASE}-smoke-test-runner-smoke-t
 
 Write the report using the format specified below.
 
+## Edge Case Tests (run after happy-path test in step 6)
+
+After the main happy-path test (CVE-2024-1234), run these 3 additional edge case inputs
+to verify robustness. Each is independent — a failure in one does not stop the others.
+
+### Edge Case 1: Malformed CVE ID
+```bash
+cd "$TARGET" && timeout 60 uv run [cli-command] [cve-flag] "NOT-A-CVE-ID" 2>&1
+```
+Expected behavior: pipeline handles gracefully (validation error or empty result — NOT an unhandled exception).
+FAIL condition: any unhandled exception / traceback.
+
+### Edge Case 2: Non-existent but valid CVE format
+```bash
+cd "$TARGET" && timeout 60 uv run [cli-command] [cve-flag] "CVE-9999-99999" 2>&1
+```
+Expected behavior: pipeline returns result with empty/unknown enrichment (no crash).
+FAIL condition: any unhandled exception / traceback.
+
+### Edge Case 3: Empty string input
+```bash
+cd "$TARGET" && timeout 60 uv run [cli-command] [cve-flag] "" 2>&1
+```
+Expected behavior: pipeline returns validation error or empty result — NOT an unhandled exception.
+FAIL condition: any unhandled exception / traceback.
+
+### Edge Case Result Aggregation
+- Count how many of the 3 edge cases produced unhandled exceptions
+- If 0: edge cases PASS (report as EDGE CASES PASS)
+- If 1-3: edge cases FAIL (report each failure with the exception message)
+- Edge case results are logged in the report but do NOT override the main PASS/FAIL verdict
+- A project that passes the happy path but fails all 3 edge cases is still PASS (main) with WARNING (edge cases)
+
 ---
 
 ## PASS/FAIL Criteria
