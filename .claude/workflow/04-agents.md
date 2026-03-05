@@ -168,8 +168,41 @@ Target project: `[TARGET_PROJECT]`
 Save your report to `.ignorar/production-reports/semantic-correctness-auditor/phase-{N}/{TIMESTAMP}-phase-{N}-semantic-correctness-auditor-{slug}.md`
 """
 )
+Task(
+    subagent_type="smoke-test-runner",
+    model="sonnet",
+    prompt="""Execute end-to-end pipeline smoke test with synthetic input CVE-2024-1234.
+Verify pipeline runs without crashes and output contains classification, severity, cve_id.
+
+Target project: `[TARGET_PROJECT]`
+
+Save your report to `.ignorar/production-reports/smoke-test-runner/phase-{N}/{TIMESTAMP}-phase-{N}-smoke-test-runner-{slug}.md`
+"""
+)
+Task(
+    subagent_type="config-validator",
+    model="sonnet",
+    prompt="""Validate configuration consistency: env vars in .env.example,
+docker-compose.yml service references, Settings fields without defaults.
+
+Target project: `[TARGET_PROJECT]`
+
+Save your report to `.ignorar/production-reports/config-validator/phase-{N}/{TIMESTAMP}-phase-{N}-config-validator-{slug}.md`
+"""
+)
+Task(
+    subagent_type="regression-guard",
+    model="sonnet",
+    prompt="""Check for cross-phase regressions. Find recently changed files,
+build reverse dependency map, run pytest on affected modules.
+
+Target project: `[TARGET_PROJECT]`
+
+Save your report to `.ignorar/production-reports/regression-guard/phase-{N}/{TIMESTAMP}-phase-{N}-regression-guard-{slug}.md`
+"""
+)
 ```
-**Wait for all 3 to complete** (~7 min max)
+**Wait for all 6 to complete** (~7 min max)
 
 **Total with Wave 3: ~19 minutes** (Wave 1: ~7 min + Wave 2: ~5 min + Wave 3: ~7 min)
 
@@ -419,6 +452,217 @@ rg -U "except.*:[\s\n]+return \[\]" --type py
 - Wrong fallback returns: N
 ```
 
+### 9. smoke-test-runner
+
+**Scope:** End-to-end runtime verification — the only agent that actually executes the project
+
+**Model:** Sonnet
+
+**When to use:**
+- Every /verify run (Wave 3, parallel with other Wave 3 agents)
+- Especially critical after changes to graph topology, node implementations, or CLI entry points
+- After any change to the pipeline's main execution path
+
+**What it checks:**
+
+| Check | Description | Severity |
+|-------|-------------|----------|
+| **Import failure** | Project cannot be imported via `uv run python -c "import [project]"` | CRITICAL |
+| **Pipeline crash** | Unhandled exception during pipeline run with CVE-2024-1234 | CRITICAL |
+| **Timeout** | Pipeline does not complete within 120 seconds | CRITICAL |
+| **Missing required field** | Output dict missing `classification`/`severity`/`cve_id` | HIGH |
+| **Empty output** | Pipeline completes but produces no output | HIGH |
+
+**Verification method:**
+1. Resolve target project path from `.build/active-project`
+2. Read `pyproject.toml` to discover project name and CLI entry points
+3. Verify project is importable via `uv run python -c "import [project]"`
+4. Execute pipeline with synthetic input `CVE-2024-1234` using discovered CLI command
+5. Enforce 120-second timeout via `timeout 120`
+6. Inspect output for unhandled exceptions (`Traceback (most recent call last):`)
+7. Verify output contains required fields: `classification`, `severity`, `cve_id`
+
+**PASS/FAIL criteria:**
+- **PASS:** Pipeline runs end-to-end without exception, output contains all required fields
+- **FAIL:** Any CRITICAL or HIGH finding
+
+**Example invocation:**
+```python
+Task(
+    subagent_type="smoke-test-runner",
+    model="sonnet",
+    prompt="""Execute end-to-end pipeline smoke test.
+
+Target project: `[TARGET_PROJECT]`
+
+Run pipeline with synthetic input CVE-2024-1234 and verify output contains
+classification, severity, and cve_id fields.
+
+PASS criteria: 0 crashes, all required fields present.
+
+Save your report to `.ignorar/production-reports/smoke-test-runner/phase-{N}/{TIMESTAMP}-phase-{N}-smoke-test-runner-smoke-test.md`
+"""
+)
+```
+
+**Report structure:**
+```markdown
+# Smoke Test Report
+
+## Summary
+- Command run: [full command]
+- Exit code: N
+- Duration: N seconds
+- Required fields found: classification=[Y/N], severity=[Y/N], cve_id=[Y/N]
+- Status: PASS / FAIL
+
+## Findings
+### [ST-001] [Severity] [Title]
+- File: path/to/file.py:line
+- Description: ...
+- Fix: ...
+```
+
+### 10. config-validator
+
+**Scope:** Configuration consistency — env vars and Docker service references
+
+**Model:** Sonnet
+
+**When to use:**
+- After adding new Settings fields or new os.getenv() calls
+- After modifying docker-compose.yml service definitions
+- After any change to infrastructure configuration
+- Every /verify run (Wave 3)
+
+**What it checks:**
+
+| Check | Description | Severity |
+|-------|-------------|----------|
+| **Missing .env.example** | No .env.example file found in project root | CRITICAL |
+| **Undocumented env var** | settings.* or os.getenv() reference not in .env.example | HIGH |
+| **Mismatched docker service** | Service name in code not defined in docker-compose.yml | HIGH |
+| **Undocumented Settings field** | Settings field with no default not in .env.example | HIGH |
+
+**Verification method:**
+1. Resolve target project path from `.build/active-project`
+2. Grep `settings.*`, `os.getenv()`, `os.environ[]` across all `.py` files to build required env vars list
+3. Read `.env.example` and extract all documented variable names
+4. Cross-reference required vs documented — flag gaps
+5. Read `docker-compose.yml` and extract service names and port mappings
+6. Grep code for Docker service name references — flag mismatches
+7. Find `Settings` classes, identify fields with no default — cross-reference with `.env.example`
+
+**PASS/FAIL criteria:**
+- **PASS:** All required env vars documented, all docker service references consistent
+- **FAIL:** Any CRITICAL or HIGH finding
+
+**Example invocation:**
+```python
+Task(
+    subagent_type="config-validator",
+    model="sonnet",
+    prompt="""Validate configuration consistency.
+
+Target project: `[TARGET_PROJECT]`
+
+Check all settings.* and os.getenv() references against .env.example.
+Check docker-compose.yml service names against code references.
+
+PASS criteria: all env vars documented, all docker services consistent.
+
+Save your report to `.ignorar/production-reports/config-validator/phase-{N}/{TIMESTAMP}-phase-{N}-config-validator-config-check.md`
+"""
+)
+```
+
+**Report structure:**
+```markdown
+# Config Validator Report
+
+## Summary
+- Required env vars found in code: N
+- Documented in .env.example: N
+- Undocumented (FAIL): N
+- Docker services in docker-compose.yml: N
+- Mismatched references: N
+- Status: PASS / FAIL
+
+## Findings
+### [CV-001] [Severity] [Title]
+- File: path/to/file.py:line
+- Description: ...
+- Fix: ...
+```
+
+### 11. regression-guard
+
+**Scope:** Cross-phase regression detection via targeted pytest on reverse-dependent modules
+
+**Model:** Sonnet
+
+**When to use:**
+- After changes to shared modules (state, DI, constants, graph topology)
+- When completing a phase that modifies modules used in earlier phases
+- Every /verify run (Wave 3)
+
+**What it checks:**
+
+| Check | Description | Severity |
+|-------|-------------|----------|
+| **Test regression** | Previously-passing test now FAILED after recent changes | HIGH |
+| **Test ERROR** | Test fails to collect or setup due to import/fixture error | HIGH |
+
+**Verification method:**
+1. `git diff HEAD~1 --name-only` to find recently changed files
+2. Grep to find all modules that import from changed files (reverse dependency map)
+3. Find corresponding test files for each reverse-dependent module
+4. Run `uv run pytest [affected_tests] -v --tb=short`
+5. Flag any FAILED or ERROR
+
+**PASS/FAIL criteria:**
+- **PASS:** 0 FAILED, 0 ERROR in all reverse-dependent test modules
+- **FAIL:** Any FAILED or ERROR in affected test modules
+
+**Example invocation:**
+```python
+Task(
+    subagent_type="regression-guard",
+    model="sonnet",
+    prompt="""Check for cross-phase regressions.
+
+Target project: `[TARGET_PROJECT]`
+
+Find recently changed files, build reverse dependency map, run pytest on affected modules.
+Flag any previously-passing test that now fails.
+
+PASS criteria: 0 regressions in reverse-dependent modules.
+
+Save your report to `.ignorar/production-reports/regression-guard/phase-{N}/{TIMESTAMP}-phase-{N}-regression-guard-regression-check.md`
+"""
+)
+```
+
+**Report structure:**
+```markdown
+# Regression Guard Report
+
+## Summary
+- Changed files (HEAD~1): N
+- Reverse-dependent modules: N
+- Affected test files: N
+- Tests run: N
+- PASSED: N | FAILED: N | ERROR: N | SKIPPED: N
+- Status: PASS / FAIL
+
+## Findings
+### [RG-001] [Severity] [Title]
+- File: path/to/file.py:line
+- Description: ...
+- Caused by change to: ...
+- Fix: ...
+```
+
 #### Idle State Management
 
 **Note:** Teammates go idle after every turn - this is normal behavior.
@@ -628,7 +872,16 @@ Task(code-reviewer, ...) + Task(test-generator, ...)
 
 ## Wave 3 Verification Agents
 
-Specialized agents that target specific runtime safety concerns beyond standard code quality. These run on-demand (not every commit) when the codebase uses async frameworks.
+Specialized agents that target specific runtime safety concerns beyond standard code quality. These run in Wave 3 (parallel, after Wave 1+2 complete).
+
+| Agente | Cuándo | Qué verifica | Reporte | Modelo Recomendado |
+|--------|--------|--------------|---------|-------------------|
+| integration-tracer | After code-implementer modifies call chains | Execution path integrity, stubs, dead exports | ~500+ líneas (flexible) | Sonnet |
+| async-safety-auditor | After code-implementer touches async code | `asyncio.run()` reachability from async contexts | ~500+ líneas (flexible) | Sonnet |
+| semantic-correctness-auditor | After every code-implementer cycle | No-op validators, hollow functions, swallowed exceptions | ~500+ líneas (flexible) | Sonnet |
+| smoke-test-runner | Every /verify run (Wave 3) | End-to-end pipeline execution | ~500+ líneas (flexible) | Sonnet |
+| config-validator | Every /verify run (Wave 3) | Env var and docker config consistency | ~500+ líneas (flexible) | Sonnet |
+| regression-guard | Every /verify run (Wave 3) | Cross-phase regression detection | ~500+ líneas (flexible) | Sonnet |
 
 ### async-safety-auditor
 
