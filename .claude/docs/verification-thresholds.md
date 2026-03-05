@@ -34,6 +34,8 @@
 | **regression-guard** | Regression | 0 previously-passing tests failing | Any test regression in affected modules | ✅ Yes | regression-guard |
 | **dependency-scanner** | Dependency Security | 0 CRITICAL CVEs, 0 HIGH CVEs | Any CRITICAL or HIGH CVE in dependencies | ✅ Yes | dependency-scanner |
 | **circular-import-detector** | Import Graph | 0 circular import cycles | Any circular import cycle detected | ✅ Yes | circular-import-detector |
+| **import-resolver** | Import Safety | 0 unresolvable absolute imports | Any ImportError outside safe blocks | ✅ Yes | import-resolver |
+| **per-module coverage floor** | Testing | All modules >= 50% line-rate | Any module < 50% | ✅ Yes | N/A (script) |
 
 ---
 
@@ -264,6 +266,50 @@
 
 **Pass:** 0 circular import cycles detected in src/
 **Fail:** Any circular import cycle detected (even one causes potential ImportError at runtime)
+
+---
+
+### 14. import-resolver
+
+**Agent:** `import-resolver`
+**Wave:** Wave 3 (parallel)
+**Checks:** All absolute `import X` and `from X import Y` statements in `src/`
+
+| Result | Criteria |
+|--------|----------|
+| PASS | 0 unresolvable absolute imports |
+| FAIL | Any `ModuleNotFoundError` or `ImportError` from an absolute import outside `try/except ImportError` and outside `TYPE_CHECKING` blocks |
+| SKIP | If `src/` directory does not exist in target project |
+
+**Severity:** CRITICAL — an unresolvable import causes `ImportError` at runtime, crashing the application.
+
+**What is skipped:**
+- Relative imports (`.module`, `..module`) — covered by circular-import-detector
+- `TYPE_CHECKING` blocks — imports never executed at runtime
+- `try/except ImportError` blocks — conditional imports, safe to skip
+
+---
+
+### 15. Per-Module Coverage Floor
+
+**Script:** `.claude/scripts/check-module-coverage.py`
+**When:** Runs after `pytest --cov --cov-report=xml` in the coverage step
+**Input:** `coverage.xml` in the target project root
+
+| Result | Criteria |
+|--------|----------|
+| PASS | All non-`__init__.py` modules in coverage.xml have line-rate >= 50% |
+| FAIL | Any module with line-rate < 50% |
+| WARNING | `coverage.xml` not found — run `pytest --cov --cov-report=xml` first |
+
+**Floor:** 50% per module (in addition to the existing 75% project-wide gate)
+
+**What is excluded:**
+- `__init__.py` files (intentionally sparse, aggregates imports)
+- `<string>` and `<unknown>` entries (eval'd code, not real modules)
+
+**Note:** A project can pass the 75% project-wide gate while having individual modules
+at 0%. This floor prevents new modules from being silently uncovered.
 
 ---
 
