@@ -1,7 +1,7 @@
 ---
 name: verify
 disable-model-invocation: true
-description: "Ejecuta los 5 agentes mandatorios de verificacion y limpia markers pendientes"
+description: "Ejecuta los 8 agentes mandatorios de verificacion (Wave 1+2+3) y limpia markers pendientes"
 context: fork
 agent: general-purpose
 argument-hint: "[--fix]"
@@ -52,11 +52,11 @@ Si no hay archivos pendientes: "No hay archivos pendientes de verificacion"
 
 ### 2. Ejecutar Agentes (WAVE-BASED PARALLEL)
 
-TODOS deben ejecutarse en paralelo (2 waves). Si alguno falla, PARAR y reportar.
+TODOS deben ejecutarse en paralelo (3 waves). Si alguno falla, PARAR y reportar.
 
 **Orchestration Reference:** `.claude/scripts/orchestrate-parallel-verification.py`
-- Wave-based parallel execution (Wave 1: 3 agents ~7 min, Wave 2: 2 agents ~5 min)
-- Threshold validation per `.claude/rules/verification-thresholds.md`
+- Wave-based parallel execution (Wave 1: 3 agents ~7 min, Wave 2: 2 agents ~5 min, Wave 3: 3 agents ~7 min)
+- Threshold validation per `.claude/docs/verification-thresholds.md`
 - JSONL logging to `.build/logs/agents/YYYY-MM-DD.jsonl`
 - Automated pending marker cleanup on success
 
@@ -213,6 +213,63 @@ Output format:
 
 Wait for both to complete.
 
+#### Wave 3 (Paralelo - ~7 min max)
+
+Submit 3 agents in parallel after Wave 2 completes:
+
+**integration-tracer:**
+```
+Task(subagent_type="integration-tracer", prompt="""Trace execution paths from all entry points (CLI commands, graph add_node calls)
+through the full call chain. Verify parameter forwarding, detect stubs/hollow endpoints,
+dead code, and symbols exported in __all__ but never imported in execution paths.
+
+Target project: [TARGET_PROJECT]
+
+PASS criteria: 0 CRITICAL + 0 HIGH findings.
+
+Save your report to `.ignorar/production-reports/integration-tracer/phase-{N}/{TIMESTAMP}-phase-{N}-integration-tracer-{slug}.md`
+""")
+```
+
+**async-safety-auditor:**
+```
+Task(subagent_type="async-safety-auditor", prompt="""Audit all async/sync boundary violations: asyncio.run() inside async contexts,
+sync blocking calls in async functions, missing await on coroutines, and event loop
+nesting issues.
+
+Target project: [TARGET_PROJECT]
+
+PASS criteria: 0 CRITICAL + 0 HIGH findings.
+
+Save your report to `.ignorar/production-reports/async-safety-auditor/phase-{N}/{TIMESTAMP}-phase-{N}-async-safety-auditor-{slug}.md`
+""")
+```
+
+**semantic-correctness-auditor:**
+```
+Task(subagent_type="semantic-correctness-auditor", prompt="""Audit all Python files for semantic correctness issues:
+1. @field_validator / @model_validator / @validator bodies that return v without any condition (no-op validators)
+2. Functions whose docstring describes behavior X but body does not implement X (returns empty/None/pass)
+3. except branches that silently swallow exceptions without logging or re-raising
+4. Fallback returns that should be errors (returning [] when real data was expected)
+
+Target project: [TARGET_PROJECT]
+
+PASS criteria: 0 semantic no-ops (0 HIGH findings).
+
+Save your report to `.ignorar/production-reports/semantic-correctness-auditor/phase-{N}/{TIMESTAMP}-phase-{N}-semantic-correctness-auditor-{slug}.md`
+""")
+```
+
+Wait for all 3 to complete.
+
+**Total with Wave 3: ~19 minutes** (Wave 1: ~7 min + Wave 2: ~5 min + Wave 3: ~7 min)
+
+**Threshold references (Wave 3):** See `.claude/workflow/04-agents.md` sections 6–8 for PASS/FAIL criteria per agent.
+- integration-tracer: PASS = 0 CRITICAL + 0 HIGH
+- async-safety-auditor: PASS = 0 CRITICAL + 0 HIGH
+- semantic-correctness-auditor: PASS = 0 HIGH findings
+
 ## Tool Schema Invocation (Phase 3 - Programmatic Tool Calling)
 
 Agents use structured JSON schemas to invoke tools with precision and reduced token overhead.
@@ -299,7 +356,7 @@ If schema validation passes:
 
 ### Schema Reference
 
-For complete schema definitions see: `.claude/rules/agent-tool-schemas.md`
+For complete schema definitions read: `.claude/docs/agent-tool-schemas.md` (on demand)
 
 ---
 
