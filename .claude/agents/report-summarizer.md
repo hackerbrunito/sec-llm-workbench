@@ -5,8 +5,6 @@ description: Reads one full agent verification report and produces a compact sum
 tools: Read, Bash, Write, Grep
 model: haiku
 disallowedTools: [Edit]
-cache_control: ephemeral
-budget_tokens: 10000
 ---
 
 ## Role

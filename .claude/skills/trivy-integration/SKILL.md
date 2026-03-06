@@ -1,6 +1,6 @@
 ---
 name: trivy-integration
-description: "Trivy scanner integration patterns for vulnerability ingestion and parsing"
+description: "Trivy scanner integration patterns for vulnerability ingestion and parsing. TRIGGER when: user asks about parsing Trivy scan output, ingesting vulnerability JSON/SARIF reports, or processing SBOM data from Trivy. DO NOT TRIGGER for general vulnerability research or CVE lookups."
 user-invocable: false
 ---
 

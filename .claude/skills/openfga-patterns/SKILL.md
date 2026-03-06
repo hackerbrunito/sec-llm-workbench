@@ -1,6 +1,6 @@
 ---
 name: openfga-patterns
-description: "OpenFGA authorization patterns (ReBAC, relationship tuples, permission checks)"
+description: "OpenFGA authorization patterns (ReBAC, relationship tuples, permission checks). TRIGGER when: code imports `openfga_sdk` or user asks about OpenFGA, ReBAC, relationship-based access control, or authorization tuple modeling. DO NOT TRIGGER for non-OpenFGA auth systems."
 user-invocable: false
 ---
 

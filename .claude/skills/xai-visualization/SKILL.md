@@ -1,6 +1,6 @@
 ---
 name: xai-visualization
-description: "Explainable AI visualization patterns with SHAP and LIME for audit transparency"
+description: "Explainable AI visualization patterns with SHAP and LIME for audit transparency. TRIGGER when: user asks about model explainability, SHAP values, LIME explanations, feature importance, or XAI audit visualization. DO NOT TRIGGER for general ML model training or evaluation."
 user-invocable: false
 ---
 

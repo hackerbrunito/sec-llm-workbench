@@ -1,6 +1,6 @@
 ---
 name: coding-standards-2026
-description: "Python 2026 coding standards reference (type hints, Pydantic v2, httpx, structlog, pathlib)"
+description: "Python 2026 coding standards reference (type hints, Pydantic v2, httpx, structlog, pathlib). TRIGGER when: writing or reviewing Python code that uses type hints, Pydantic v2, httpx, structlog, or pathlib. DO NOT TRIGGER when: task is not Python code."
 user-invocable: false
 ---
 

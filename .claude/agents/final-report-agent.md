@@ -5,8 +5,6 @@ description: Reads 5 compact agent summaries and the static checks report, appli
 tools: Read, Bash
 model: haiku
 disallowedTools: [Write, Edit, Glob]
-cache_control: ephemeral
-budget_tokens: 8000
 ---
 
 ## Role

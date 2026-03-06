@@ -4,12 +4,10 @@ name: best-practices-enforcer
 description: Verify and fix Python 2026 best practices violations (type hints, Pydantic v2, httpx, structlog, pathlib). Saves reports to .ignorar/production-reports/.
 tools: Read, Grep, Glob, Bash, mcp__context7__resolve-library-id, mcp__context7__query-docs
 model: sonnet
-memory: project
+memory: true
 permissionMode: plan
 disallowedTools: [Write, Edit]
 skills: [coding-standards-2026]
-cache_control: ephemeral
-budget_tokens: 8000
 ---
 
 ## Project Context (CRITICAL)

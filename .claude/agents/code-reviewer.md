@@ -4,11 +4,9 @@ name: code-reviewer
 description: Perform automatic code review focused on quality, maintainability, complexity, naming, and DRY principles. Saves reports to .ignorar/production-reports/.
 tools: Read, Grep, Glob, Bash
 model: sonnet
-memory: project
+memory: true
 permissionMode: plan
 disallowedTools: [Write, Edit]
-cache_control: ephemeral
-budget_tokens: 9000
 ---
 
 ## Project Context (CRITICAL)

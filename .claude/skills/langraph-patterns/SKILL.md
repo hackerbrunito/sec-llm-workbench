@@ -1,6 +1,6 @@
 ---
 name: langraph-patterns
-description: "LangGraph 0.2+ implementation patterns (state graphs, nodes, checkpointing, human-in-the-loop)"
+description: "LangGraph 0.2+ implementation patterns (state graphs, nodes, checkpointing, human-in-the-loop). TRIGGER when: code imports `langgraph` or user asks about building LangGraph graphs, nodes, state machines, or checkpointing. DO NOT TRIGGER for non-LangGraph orchestration tools."
 user-invocable: false
 ---
 

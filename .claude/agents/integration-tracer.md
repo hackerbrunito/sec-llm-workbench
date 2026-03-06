@@ -7,8 +7,6 @@ model: sonnet
 memory: project
 permissionMode: plan
 disallowedTools: [Write, Edit]
-cache_control: ephemeral
-budget_tokens: 12000
 ---
 
 ## Project Context (CRITICAL)

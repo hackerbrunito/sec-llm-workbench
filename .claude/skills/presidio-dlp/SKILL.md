@@ -1,6 +1,6 @@
 ---
 name: presidio-dlp
-description: "Data Loss Prevention patterns with Microsoft Presidio (PII detection, anonymization)"
+description: "Data Loss Prevention patterns with Microsoft Presidio (PII detection, anonymization). TRIGGER when: code imports `presidio_analyzer` or `presidio_anonymizer`, or user asks about PII detection, DLP, or data anonymization. DO NOT TRIGGER for general data processing without PII concerns."
 user-invocable: false
 ---
 

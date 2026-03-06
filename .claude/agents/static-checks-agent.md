@@ -5,8 +5,6 @@ description: Runs ruff format, ruff check, mypy, and pytest in the active projec
 tools: Bash
 model: haiku
 disallowedTools: [Write, Edit, Read, Glob, Grep]
-cache_control: ephemeral
-budget_tokens: 8000
 ---
 
 ## Role

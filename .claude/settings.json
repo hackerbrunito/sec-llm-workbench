@@ -1,5 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "includeGitInstructions": false,
   "env": {
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "70",
     "ENABLE_TOOL_SEARCH": "auto:5",
@@ -17,12 +18,31 @@
     "mode": "auto-allow",
     "permissions": {
       "write": {
-        "allowOnly": ["."],
-        "denyWithinAllow": [".env", ".env.local", ".env.*", "credentials.json", "*.pem", "*.key"]
+        "allowOnly": [
+          "."
+        ],
+        "denyWithinAllow": [
+          ".env",
+          ".env.local",
+          ".env.*",
+          "credentials.json",
+          "*.pem",
+          "*.key"
+        ]
       }
     },
     "network": {
-      "allowedDomains": ["pypi.org", "api.github.com", "api.anthropic.com", "docs.pydantic.dev", "www.structlog.org", "typer.tiangolo.com", "www.anthropic.com", "docs.anthropic.com", "claude.com"]
+      "allowedDomains": [
+        "pypi.org",
+        "api.github.com",
+        "api.anthropic.com",
+        "docs.pydantic.dev",
+        "www.structlog.org",
+        "typer.tiangolo.com",
+        "www.anthropic.com",
+        "docs.anthropic.com",
+        "claude.com"
+      ]
     },
     "allowUnsandboxedCommands": false,
     "allowUnixSockets": false
@@ -200,7 +220,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "prompt=\"$USER_PROMPT\"; match=$(echo \"$prompt\" | grep -ioE '(Contin[úu]a con|Continue with|Trabaja en|Work on)\\s+(.+)' | sed -E 's/(Contin[úu]a con|Continue with|Trabaja en|Work on)\\s+//i'); if [ -n \"$match\" ]; then name=$(echo \"$match\" | xargs | tr '[:upper:]' '[:lower:]' | tr ' ' '-'); found=''; for ext in json md yaml; do if [ -f \"$CLAUDE_PROJECT_DIR/projects/$name.$ext\" ]; then found=\"$CLAUDE_PROJECT_DIR/projects/$name.$ext\"; break; fi; done; if [ -n \"$found\" ]; then echo \"PROJECT DETECTED: $match -> $found\"; else echo \"PROJECT DETECTED: $match (no config found in projects/)\"; fi; fi"
+            "command": "prompt=\"$USER_PROMPT\"; match=$(echo \"$prompt\" | grep -ioE '(Contin[\u00fau]a con|Continue with|Trabaja en|Work on)\\s+(.+)' | sed -E 's/(Contin[\u00fau]a con|Continue with|Trabaja en|Work on)\\s+//i'); if [ -n \"$match\" ]; then name=$(echo \"$match\" | xargs | tr '[:upper:]' '[:lower:]' | tr ' ' '-'); found=''; for ext in json md yaml; do if [ -f \"$CLAUDE_PROJECT_DIR/projects/$name.$ext\" ]; then found=\"$CLAUDE_PROJECT_DIR/projects/$name.$ext\"; break; fi; done; if [ -n \"$found\" ]; then echo \"PROJECT DETECTED: $match -> $found\"; else echo \"PROJECT DETECTED: $match (no config found in projects/)\"; fi; fi"
           }
         ]
       }

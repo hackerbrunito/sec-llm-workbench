@@ -6,8 +6,6 @@ tools: Read, Grep, Glob, Bash
 model: sonnet
 memory: project
 permissionMode: default
-cache_control: ephemeral
-budget_tokens: 10000
 ---
 
 ## Project Context (CRITICAL)
