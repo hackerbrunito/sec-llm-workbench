@@ -20,7 +20,7 @@ You will receive in your prompt:
 - `{REPORT_PATH}` — absolute path to the full incremental report
 - `{SUMMARY_PATH}` — absolute path where you must write the compact summary
 - `{FIXED_TIMESTAMP}` — timestamp for the summary header
-- Thresholds reference: `~/sec-llm-workbench/.claude/rules/verification-thresholds.md`
+- Thresholds reference: `~/sec-llm-workbench/.claude/docs/verification-thresholds.md`
 
 Execute exactly these steps:
 

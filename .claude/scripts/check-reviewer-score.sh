@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # check-reviewer-score.sh - Verificar score de code-reviewer contra threshold
-# Reference: .claude/rules/verification-thresholds.md
+# Reference: .claude/docs/verification-thresholds.md
 # Exit codes: 0 = PASS (score >= 9.0), 1 = FAIL (score < 9.0), 0 with WARNING = no report found
 
 set -euo pipefail

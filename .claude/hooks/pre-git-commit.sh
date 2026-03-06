@@ -3,7 +3,7 @@
 # Este hook se ejecuta ANTES de cualquier comando Bash
 # Solo actua si el comando es "git commit"
 # Output format: hookSpecificOutput (verified via Context7 2026-01-27)
-# Reference: .claude/rules/verification-thresholds.md
+# Reference: .claude/docs/verification-thresholds.md
 
 set -euo pipefail
 
@@ -48,7 +48,14 @@ EOF
 fi
 
 # Es un git commit - verificar markers pendientes
-VERIFICATION_DIR="${CLAUDE_PROJECT_DIR:-.}/.build/checkpoints/pending"
+# Check the active project's pending dir (post-code.sh writes markers there)
+ACTIVE_PROJECT=$(cat "${CLAUDE_PROJECT_DIR:-.}/.build/active-project" 2>/dev/null || echo "")
+ACTIVE_PROJECT="${ACTIVE_PROJECT/#\~/$HOME}"  # expand ~ to absolute path
+if [ -n "$ACTIVE_PROJECT" ] && [ -d "$ACTIVE_PROJECT" ]; then
+    VERIFICATION_DIR="$ACTIVE_PROJECT/.build/checkpoints/pending"
+else
+    VERIFICATION_DIR="${CLAUDE_PROJECT_DIR:-.}/.build/checkpoints/pending"
+fi
 
 # Si no existe el directorio, no hay nada pendiente
 if [ ! -d "$VERIFICATION_DIR" ]; then

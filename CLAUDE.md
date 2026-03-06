@@ -17,17 +17,13 @@
 **IMPORTANT** - Human checkpoints:
 7. See @.claude/workflow/03-human-checkpoints.md
 
-## References (read on demand)
+## References (read on demand, NOT auto-loaded)
 
 | Topic | File |
 |-------|------|
-| Session start | @.claude/workflow/01-session-start.md |
-| Reflexion Loop | `.claude/workflow/02-reflexion-loop.md` (on-demand) |
-| Human checkpoints | @.claude/workflow/03-human-checkpoints.md |
-| Agents | @.claude/workflow/04-agents.md |
-| Before commit | @.claude/workflow/05-before-commit.md |
-| Auto decisions | @.claude/workflow/06-decisions.md |
-| Error history | @.claude/docs/errors-to-rules.md |
+| Reflexion Loop | `.claude/workflow/02-reflexion-loop.md` |
+| Agents | `.claude/workflow/04-agents.md` |
+| Auto decisions | `.claude/workflow/06-decisions.md` |
 
 ## On-Demand References (loaded via skills, NOT at startup)
 

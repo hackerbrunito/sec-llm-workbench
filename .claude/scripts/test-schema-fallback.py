@@ -5,7 +5,7 @@ Schema Validation Fallback Strategy Test
 Tests the fallback mechanism when JSON schemas fail validation.
 Verifies graceful degradation to natural language mode.
 
-Reference: .claude/rules/agent-tool-schemas.md (lines 639-657)
+Reference: .claude/docs/agent-tool-schemas.md (lines 639-657)
 """
 
 import json

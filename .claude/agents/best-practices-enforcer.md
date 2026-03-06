@@ -171,7 +171,7 @@ Do not rely on memory for library syntax. Always verify against Context7 documen
 ## Tool Invocation (Phase 3 - JSON Schemas + Parallel Calling)
 <!-- cache_control: start -->
 
-**Reference:** For complete tool schemas, parameter definitions, and agent-specific examples, see `.claude/rules/agent-tool-schemas.md`
+**Reference:** For complete tool schemas, parameter definitions, and agent-specific examples, read `.claude/docs/agent-tool-schemas.md` on demand
 
 Use structured JSON schemas for tool invocation to reduce token consumption (-37%) and improve precision.
 

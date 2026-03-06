@@ -18,7 +18,7 @@ You are the last agent in the /verify pipeline. You read only compact summary fi
 You will receive in your prompt:
 - `{SUMMARY_PATHS}` — absolute paths to the 5 compact summary files (one per agent type)
 - `{STATIC_CHECKS_PATH}` — absolute path to the static checks report
-- Thresholds reference: `~/sec-llm-workbench/.claude/rules/verification-thresholds.md`
+- Thresholds reference: `~/sec-llm-workbench/.claude/docs/verification-thresholds.md`
 
 Execute exactly these steps:
 

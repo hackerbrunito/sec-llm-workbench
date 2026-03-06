@@ -74,7 +74,7 @@ class VerificationOrchestrator:
         self.logs_dir = project_root / ".build" / "logs" / "agents"
         self.logs_dir.mkdir(parents=True, exist_ok=True)
 
-        # Verification thresholds from .claude/rules/verification-thresholds.md
+        # Verification thresholds from .claude/docs/verification-thresholds.md
         self.thresholds = {
             "best-practices-enforcer": {"violations": 0},
             "security-auditor": {"critical": 0, "high": 0},  # MEDIUM allowed
